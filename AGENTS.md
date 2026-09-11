@@ -29,9 +29,11 @@
 
 ### 编码
 
-- 补丁只有两种交付形态：`patches\apply-auto-allow.ps1`（锚定式，默认用）与 `patches\auto-allow-devtools-connections-<tag>.patch`（钉 tag 标准补丁）；两者必须等价
+- 补丁只有两种交付形态：`patches\apply-auto-allow.py`（锚定式 uv 运行，默认用，三模式 before/after/replace）与 `patches\auto-allow-devtools-connections-<tag>.patch`（钉 tag 标准补丁）；两者必须等价（2026-09-11 起替代 ps1 版）
+- 补丁边界 19 锚 12 文件（2026-09-11 深夜定档,清单与机制见 S002/S003）：CDP 摩擦（对话框/端口 9222/默认目录/调试 infobar）、启动静默（API 密钥/过时系统/OSCrypt/默认浏览器与会话恢复 infobar/crash 气泡两处/首跑向导）、Google 触点剔除（NTP 工厂 about:blank/默认搜索关/AI Mode 关/启动型恒 DEFAULT）
 - 改锚点或升 tag：先在 `poc\S001-chromium152-auto-allow\` 参照树上验证两种形态等价，再更新补丁文件
-- 开关语义固定：`AcceptDebugging()` 开头短路回 `kAllow`；不改动 `SetActiveWebSocketConnections` 的 infobar
+- 开关语义：`AcceptDebugging()` 开头短路回 `kAllow`；`SetActiveWebSocketConnections` 的 infobar 已裁定移除（2026-09-11 用户裁定，S002 第二节）；短路整段逻辑一律用替换式锚定，禁止提前 return（-Wunreachable-code，M011）
+- 明确保留的本机安全闸门：端口仅 127.0.0.1、RemoteDebuggingAllowed 策略 gate、Host header 校验（S002 第四节）
 - GN 参数唯一权威是根 `args.gn`；`enable_nacl` 上游已删除，任何 args 里禁止出现 [实证: S001 结论表]
 - `poc\` 内参照文件是上游原始字节，只读不改
 

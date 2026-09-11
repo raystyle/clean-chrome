@@ -8,11 +8,12 @@
 # 1 构建全流程照操作手册执行(唯一权威)
 docs\references\R001-chromium-build-操作手册.md
 
-# 2 打补丁(锚定式,幂等)
-patches\apply-auto-allow.ps1 -SrcRoot C:\unsafe-chrome\chromium\src
+# 2 打补丁(锚定式,幂等,uv 全平台)
+uv run patches/apply-auto-allow.py --src-root C:/unsafe-chrome/chromium/src
 
-# 3 运行
-out\Release\chrome.exe --user-data-dir=C:\tmp\cdp-dev --remote-debugging-port=9222 --auto-allow-devtools-connections
+# 3 运行:无需任何参数,双击即用
+#    默认开 9222 调试端口、默认 User Data 零限制、零确认对话框、零提示条
+out\Dev\chrome.exe
 ```
 
 ## 研究结论速览

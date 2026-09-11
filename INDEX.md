@@ -13,8 +13,8 @@
 | 入口 | `README.md` | 项目概貌、结论表、快速开始指针 |
 | 根原语 | `PRD.md` `GOAL.md` `PLAN.md` `TODO.md` | 需求/目标/计划/进度 |
 | 协作规则 | `AGENTS.md`（`CLAUDE.md` 一行桥接） | 唯一权威源 |
-| 补丁 | `patches\apply-auto-allow.ps1` | 锚定式补丁脚本（默认用，幂等） |
-| 补丁 | `patches\auto-allow-devtools-connections-152.0.7977.84.patch` | 钉 tag 标准补丁 |
+| 补丁 | `patches\apply-auto-allow.py` | 锚定式补丁脚本（uv 运行,五文件六锚,三模式,默认用,幂等;2026-09-11 起替代 ps1） |
+| 补丁 | `patches\auto-allow-devtools-connections-152.0.7977.84.patch` | 钉 tag 标准补丁（五文件） |
 | 工具 | `tools\net-probe.py` | 网络通道稳定性评估（uv 运行 PEP 723,全平台,见 R001 替代路线） |
 | 构建 | `args.gn` | GN 参数唯一权威（enable_nacl 已删勿写） |
 | 验证产物 | `poc\S001-chromium152-auto-allow\` | 152 原始/补丁后参照树（orig/base/patched，只读） |
@@ -40,6 +40,7 @@
 | 编号 | 文件 | 主题 |
 | --- | --- | --- |
 | S001 | `docs\research\S001-devtools-auto-allow-switch-上游核实与补丁设计.md` | 开关不存在/策略不能绕/机制/补丁设计/验证记录 |
+| S002 | `docs\research\S002-CDP调试-提示限制与检测特征全景.md` | 提示/限制/检测特征逐项移除层与保留建议(五文件六锚定档) |
 
 ## 六、references 现役流程
 

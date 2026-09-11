@@ -105,7 +105,8 @@ git checkout -f -b local-152 FETCH_HEAD
 ## 四、打补丁
 
 ```powershell
-C:\unsafe-chrome\patches\apply-auto-allow.ps1 -SrcRoot C:\unsafe-chrome\chromium\src
+# 锚定式(默认用,幂等,uv 全平台,五文件六锚,before/after/replace 三模式)
+uv run C:\unsafe-chrome\patches\apply-auto-allow.py --src-root C:/unsafe-chrome/chromium/src
 ```
 
 或钉 tag 标准补丁（在 `chromium\src` 下）：
@@ -114,7 +115,7 @@ C:\unsafe-chrome\patches\apply-auto-allow.ps1 -SrcRoot C:\unsafe-chrome\chromium
 git apply C:\unsafe-chrome\patches\auto-allow-devtools-connections-152.0.7977.84.patch
 ```
 
-两者等价（S001 验证记录）；锚点失配报错是保护，照 S001 第六节升 tag 流程处理。
+两者等价（S001/S002 验证记录）；锚点失配报错是保护，照 S001 第六节升 tag 流程处理。短路整段逻辑必须用 replace 模式,禁止提前 return（-Wunreachable-code-aggressive + -Werror,M011）。效果清单见 S002 第二节（默认端口 9222、零对话框、零 infobar、默认 User Data 零限制）。
 
 ## 五、构建
 
@@ -142,11 +143,13 @@ autoninja -C out\Release chrome
 
 ## 六、验证
 
-启动：
+启动（2026-09-11 起**无需任何参数**,补丁已默认开 9222）：
 
 ```bat
-C:\unsafe-chrome\chromium\src\out\Release\chrome.exe --user-data-dir=C:\tmp\cdp-dev --remote-debugging-port=9222 --auto-allow-devtools-connections
+C:\unsafe-chrome\chromium\src\out\Release\chrome.exe
 ```
+
+如需隔离实例或换端口,显式参数仍可叠加：`--user-data-dir=<dir>` / `--remote-debugging-port=<port>`。
 
 验收四条（对应 PLAN 完成的定义）：
 
@@ -158,7 +161,17 @@ curl http://127.0.0.1:9222/json/version
 ```
 
 3. 全程无确认对话框（对照：不带开关时每个新连接弹 `DevToolsConnectionDialog`）
-4. bh 附着该实例即连即通
+4. bh 附着实战验收（优先方式,替代裸 WS 探针）：
+
+```powershell
+$env:BH_CDP_URL='http://127.0.0.1:9222'   # 直指端点,绕开 daemon discovery 的 UUID 缓存
+bh --restart --yes                          # daemon 重连;--status 应见 connected:true
+bh --new-tab 'goto_url("https://www.google.com/")'   # 专属 tab;先过首页建立 cookie
+bh 'goto_url("https://www.google.com/search?q=chromium+152")'
+bh 'js("JSON.stringify({url: location.href, title: document.title, n: document.querySelectorAll(\"#rso h3\").length})")'
+```
+
+   通过判据:connected:true、搜索结果 n>0、全程无弹窗。注意:新 profile 无 cookie 直链搜索会吃 Google `/sorry` 反机器人页,先访问一次首页即可 [实证: 2026-09-11]
 
 ## 七、Linux 与 macOS 简表
 
@@ -199,7 +212,7 @@ macOS：最新 Xcode + CLT；`ls "$(xcode-select -p)/Platforms/MacOSX.platform/D
 | 6 | Linux 没跑 install-build-deps.sh | 依赖缺失编译失败 |
 | 7 | 跟 main 不跟 tag | 补丁对不上（152 与 main 已实证漂移） |
 | 8 | 杀毒扫描 out 目录 | 链接极慢，加 Defender 排除 |
-| 9 | 默认 User Data 开调试端口 | M136 起被拒，必须另开 --user-data-dir |
+| 9 | 默认 User Data 开调试端口 | 仅锁官方品牌 Chrome（GOOGLE_CHROME_BRANDING 编译开关,remote_debugging_server.cc:169）；自编非 branded Chromium 默认目录也可直接开端口（2026-09-11 实测 9223 通）；--user-data-dir 仍推荐,作实例隔离与 profile 复用 |
 | 10 | 把调试端口暴露外网 | 开关一开即全控制权，端口只听 127.0.0.1，禁配 --remote-debugging-address |
 | 11 | pip.ini 带 BOM | vpython venv 构建必炸，无 BOM 重写（M008） |
 | 12 | 停 fetch/gclient 任务后留残骸 | M006 全套清场再重启 |
