@@ -1,16 +1,29 @@
 # args.gn for unsafe-chrome (verified against tag 152.0.7977.84)
-# Copy to src/out/Release/args.gn  (or: gn args out\Release)
+# GN args 是 per-out-dir 的：本文件是模板与说明，实际生效的是
+# out\Dev\args.gn 与 out\Release\args.gn（内容见下）。
 #
 # NOTE: enable_nacl is GONE upstream (~M14x) — do not add it, gn gen will fail
 # on the unknown argument. NaCl was removed from Chromium.
 
+# ============ out\Dev\args.gn（迭代主力，后期改功能用这个目录） ============
+# component build：chrome 拆成多个小 DLL，改 chrome/ 内文件只重链对应
+# DLL，增量重编为分钟级；symbol_level=1 保留行号可调试源码。
 is_debug = false
-is_component_build = false
+is_component_build = true
 is_official_build = false
-symbol_level = 0
+symbol_level = 1
 blink_symbol_level = 0
 v8_symbol_level = 0
 
-# For faster link iteration during development you can temporarily switch to:
-#   is_component_build = true
-# Ship the non-component build above.
+# ============ out\Release\args.gn（分发产物，验收后全编一次） ============
+# 非 component：产物干净（chrome.exe + chrome.dll 少数几个），全 0 符号
+# 编译链接最快。
+# is_debug = false
+# is_component_build = false
+# is_official_build = false
+# symbol_level = 0
+# blink_symbol_level = 0
+# v8_symbol_level = 0
+#
+# 纪律：目录参数定型后不要再改（改 symbol_level/component 会触发近全量
+# 重编）；增量由 autoninja 天然保证，无需手动清理。

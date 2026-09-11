@@ -17,3 +17,9 @@ E:\tmp\cdp-dev
 *.key
 *.pem
 .env
+
+# depot_tools 外部克隆不入仓
+depot_tools/
+
+# oma 本地状态
+.oma/

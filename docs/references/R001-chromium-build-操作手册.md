@@ -75,14 +75,26 @@ git apply E:\unsafe-chrome\patches\auto-allow-devtools-connections-152.0.7977.84
 
 ## 五、构建
 
+双目录策略（后期要改功能，增量迭代为主）：
+
+| 目录 | 定位 | args 要点 | 用途 |
+| --- | --- | --- | --- |
+| `out\Dev` | 迭代主力 | `is_component_build=true` `symbol_level=1` `blink_symbol_level=0` `v8_symbol_level=0` | component 把 chrome 拆多个小 DLL，改 chrome/ 内文件只重链对应 DLL，增量为分钟级；symbol_level=1 留行号可调源码 |
+| `out\Release` | 分发产物 | `is_component_build=false` `symbol_level=0` | 验收后全编一次的干净产物 |
+
 ```bat
+:: 先 Dev 走通验收
+gn gen out\Dev --args="is_debug=false is_component_build=true is_official_build=false symbol_level=1 blink_symbol_level=0 v8_symbol_level=0"
+autoninja -C out\Dev chrome
+
+:: 后 Release 出分发产物
 gn gen out\Release --args="is_debug=false is_component_build=false is_official_build=false symbol_level=0 blink_symbol_level=0 v8_symbol_level=0"
 autoninja -C out\Release chrome
 ```
 
-- 参数唯一权威是根 `args.gn`；`enable_nacl` 上游已删，禁止出现 [实证: S001 结论 5]
-- 只编 `chrome` 目标，不编 all；首次 2 至 8 小时（核数差异大），之后改 delegate 的增量是分钟级
-- 迭代期可临时 `is_component_build=true` 加速链接，分发构建用非 component
+- 参数唯一权威是根 `args.gn`（模板与说明）；`enable_nacl` 上游已删，禁止出现 [实证: S001 结论 5]
+- 只编 `chrome` 目标，不编 all；32 核 64GB 首编约 1 至 2 小时，改 delegate/switches 的增量是分钟级
+- 增量由 autoninja(ninja) 天然保证，不手动清 out；目录参数定型后禁止再改（改 component/symbol 触发近全量重编）
 - 构建后端已是 Siso，autoninja 用法不变
 
 ## 六、验证
