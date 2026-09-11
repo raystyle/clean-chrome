@@ -20,9 +20,10 @@
 
 ## 进程
 
-- 当前目标：D02 Windows 构建（进行中）
-- 研究与补丁已就绪；构建未开始
-- 环境待办：VS 2026 (>=18.0.0) + Win11 SDK 10.0.28000.2270 + Debugging Tools 10.0.26100.3323+；`DEPOT_TOOLS_WIN_TOOLCHAIN=0`；本机全局 `git core.autocrlf` 2026-09-11 时仍为 true，须按 R001 预检改 false（改后复核） [记忆: 改没改以下次会话 `git config --global core.autocrlf` 输出为准]
+- 当前目标：D02 Windows 构建（**挂起：等用户迁移项目目录**）
+- 已完成：git 六条全局配置；depot_tools 就位（用户 PATH 前插 + `DEPOT_TOOLS_WIN_TOOLCHAIN=0`）；增量编译双目录策略定档
+- 2026-09-11 批次三：E: 盘（外置 USB SSD，exFAT，`Full Repair Needed`）反复掉线，fetch 与 VS 安装器下载均毁（M005）；用户裁定「等我迁移」，迁移完成后从 task #6（VS 安装）与 task #7（fetch，新目录）接续
+- 环境待办：VS 2026 安装（bootstrap 重新下载，勿用 E: 盘上残留文件）；源码 checkout 落内置 NTFS 盘（R001 路径届时同步）
 
 ## 历史
 

@@ -8,3 +8,4 @@
 | M002 | `$t.Replace([char]0x2192,'->')` 抛 MethodException 且非终止，后续语句带旧值继续跑，打印 done 假成功 | 字符串长度 2 匹配到了 char 重载 | 多字符替换写 `.Replace([string][char]0x2192,'->')` 或直接字面量；脚本加 `$ErrorActionPreference='Stop'` | 2026-09-11 |
 | M003 | `git diff --no-index` 传 Windows 反斜杠路径，输出头带引号且路径含 `\`，后处理正则替换全部落空，patch 0 字节/脏头 | git 对含反斜杠路径按需加引号转义 | 传参一律用正斜杠；生成后 `Select-String '^diff --git'` 自检再落盘 | 2026-09-11 |
 | M004 | `git apply` 后文件哈希与脚本输出不一致，疑补丁错误 | 本机全局 `core.autocrlf=true` 令 git apply 全文重写为 CRLF；内容实为等价 | Chromium 仓必须 `core.autocrlf false`；字节比对前先归一换行；真正判据是 `git apply --check` 通过 + 内容等价 [实证: 2026-09-11] | 2026-09-11 |
+| M005 | 构建启动阶段 E: 盘反复掉线：fetch 中途目录消失、VS 安装器下载后「文件损坏且无法读取」，`Get-Volume` 显示 `Full Repair Needed` | E: 是外置 USB SSD（exFAT，无日志）：小文件高压写入触发文件系统脏位与瞬时掉线；Chromium 官方要求 NTFS 盘 | Chromium checkout 必须放内置 NTFS 盘（官方推荐 `C:\src\chromium` 一类根下短路径）；外置盘只做备份不做构建盘；开工前 `Get-Volume` 查 HealthStatus，迁移后重新下载曾落该盘的安装文件 [实证: 2026-09-11] | 2026-09-11 |
