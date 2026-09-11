@@ -288,6 +288,14 @@ NEW_SR_BUBBLE_2 = (
 )
 MARK_SR_BUBBLE_2 = "  // unsafe-chrome: no crash-restore bubble from the session-service"
 
+ANCHOR_PDF_INFOBAR = "BASE_FEATURE(kPdfInfoBar, base::FEATURE_ENABLED_BY_DEFAULT);"
+NEW_PDF_INFOBAR = (
+    "// unsafe-chrome: never offer to become the default PDF viewer\n"
+    "// (local automation build).\n"
+    "BASE_FEATURE(kPdfInfoBar, base::FEATURE_DISABLED_BY_DEFAULT);"
+)
+MARK_PDF_INFOBAR = "// unsafe-chrome: never offer to become the default PDF viewer"
+
 # --- engine -------------------------------------------------------------------
 
 def edit_file(path: Path, anchor: str, new: str, marker: str, label: str,
@@ -374,6 +382,9 @@ def main() -> int:
     edit_file(root / "chrome/browser/sessions/session_service.cc",
               ANCHOR_SR_BUBBLE_2, NEW_SR_BUBBLE_2, MARK_SR_BUBBLE_2,
               "session_service.cc (no crash bubble, 2nd call site)", mode="replace")
+    edit_file(root / "chrome/browser/ui/ui_features.cc",
+              ANCHOR_PDF_INFOBAR, NEW_PDF_INFOBAR, MARK_PDF_INFOBAR,
+              "ui_features.cc (no default-PDF-viewer infobar)", mode="replace")
 
     print("\nDone. Build with:\n  autoninja -C out\\Dev chrome   (incremental: minutes)")
     print("Run with: no arguments needed -- port 9222 opens by default, no prompts.")
