@@ -1,32 +1,5 @@
-diff --git a/chrome/common/chrome_switches.h b/chrome/common/chrome_switches.h
-index f35446f..b527595 100644
---- a/chrome/common/chrome_switches.h
-+++ b/chrome/common/chrome_switches.h
-@@ -53,6 +53,7 @@ extern const char kAppRunOnOsLoginMode[];
- extern const char kAppShim[];
- extern const char kAppsGalleryUpdateURL[];
- extern const char kAuthServerAllowlist[];
-+extern const char kAutoAllowDevtoolsConnections[];
- extern const char kAutoOpenDevToolsForTabs[];
- extern const char kAutoSelectDesktopCaptureSource[];
- extern const char kAutoSelectScreenCaptureSource[];
-diff --git a/chrome/common/chrome_switches.cc b/chrome/common/chrome_switches.cc
-index 17f8094..b0403ac 100644
---- a/chrome/common/chrome_switches.cc
-+++ b/chrome/common/chrome_switches.cc
-@@ -89,6 +89,10 @@ const char kAppsGalleryUpdateURL[] = "apps-gallery-update-url";
- // Allowlist for Negotiate Auth servers
- const char kAuthServerAllowlist[] = "auth-server-allowlist";
- 
-+// Automatically accepts incoming remote debugging connections without showing
-+// the consent dialog. Local automation builds only; never send upstream.
-+const char kAutoAllowDevtoolsConnections[] = "auto-allow-devtools-connections";
-+
- // This flag makes Chrome auto-open DevTools window for each tab. It is
- // intended to be used by developers and automation to not require user
- // interaction for opening DevTools.
 diff --git a/chrome/browser/devtools/chrome_devtools_manager_delegate.cc b/chrome/browser/devtools/chrome_devtools_manager_delegate.cc
-index c9f49cd..1ad759e 100644
+index c9f49cd198..3341165538 100644
 --- a/chrome/browser/devtools/chrome_devtools_manager_delegate.cc
 +++ b/chrome/browser/devtools/chrome_devtools_manager_delegate.cc
 @@ -518,6 +518,15 @@ void ChromeDevToolsManagerDelegate::UpdateDeviceDiscovery() {
@@ -45,3 +18,275 @@ index c9f49cd..1ad759e 100644
    auto wrapped_callback = base::BindOnce(
        [](AcceptCallback inner_callback,
           content::DevToolsManagerDelegate::AcceptConnectionResult result) {
+@@ -540,17 +549,9 @@ void ChromeDevToolsManagerDelegate::AcceptDebugging(AcceptCallback callback) {
+ 
+ void ChromeDevToolsManagerDelegate::SetActiveWebSocketConnections(
+     size_t count) {
+-  if (count == 0 && infobar_) {
+-    // We need to reset the pointer to the infobar before closing it because
+-    // closing the infobar deletes it.
+-    auto* infobar = infobar_.get();
+-    infobar_ = nullptr;
+-    infobar->Close();
+-  } else if (count > 0 && !infobar_) {
+-    auto delegate = std::make_unique<DevToolsRemoteServerInfobarDelegate>();
+-    delegate->AddObserver(this);
+-    infobar_ = GlobalConfirmInfoBar::Show(std::move(delegate));
+-  }
++  // unsafe-chrome: never show the "remote debugging active" infobar in
++  // this local automation build. (Upstream show/close block replaced;
++  // -Wunreachable-code forbids an early return here.)
+ }
+ 
+ void ChromeDevToolsManagerDelegate::OnAccept() {
+diff --git a/chrome/browser/devtools/remote_debugging_server.cc b/chrome/browser/devtools/remote_debugging_server.cc
+index ea5ffb9a23..37b2dd68e5 100644
+--- a/chrome/browser/devtools/remote_debugging_server.cc
++++ b/chrome/browser/devtools/remote_debugging_server.cc
+@@ -167,18 +167,10 @@ IsRemoteDebuggingAllowed(const std::optional<bool>& is_default_user_data_dir,
+         RemoteDebuggingServer::NotStartedReason::kDisabledByPolicy);
+   }
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+-#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+-  constexpr bool default_user_data_dir_check_enabled = true;
+-#else
+-  const bool default_user_data_dir_check_enabled =
+-      g_enable_default_user_data_dir_check_for_chromium_branding_for_testing;
+-#endif
+-
+-  if (default_user_data_dir_check_enabled &&
+-      is_default_user_data_dir.value_or(true)) {
+-    return base::unexpected(
+-        RemoteDebuggingServer::NotStartedReason::kDisabledByDefaultUserDataDir);
+-  }
++  // unsafe-chrome: restriction removed -- the default user data dir
++  // carries no remote-debugging restriction in this local automation
++  // build. (Upstream gate block + flag definition replaced; an early
++  // return here would hit -Wunreachable-code.)
+ #endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+   return true;
+ }
+@@ -363,6 +355,12 @@ RemoteDebuggingServer::GetInstance(PrefService* local_state) {
+ 
+   std::string port_str =
+       command_line.GetSwitchValueASCII(::switches::kRemoteDebuggingPort);
++
++  // unsafe-chrome: open the debugging port on 9222 by default when launched
++  // without --remote-debugging-port (local automation build only).
++  if (port_str.empty()) {
++    port_str = "9222";
++  }
+   if (auto port = ParsePort(port_str)) {
+     base::FilePath output_dir;
+     if (*port == 0) {
+diff --git a/chrome/browser/prefs/session_startup_pref.cc b/chrome/browser/prefs/session_startup_pref.cc
+index dd071315ef..c9d33a2f46 100644
+--- a/chrome/browser/prefs/session_startup_pref.cc
++++ b/chrome/browser/prefs/session_startup_pref.cc
+@@ -71,9 +71,8 @@ SessionStartupPref::Type SessionStartupPref::GetDefaultStartupType() {
+   return SessionStartupPref::LAST;
+ #else
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC)
+-  if (features::kSetDefaultToContinueSession.Get()) {
+-    return SessionStartupPref::LAST;
+-  }
++  // unsafe-chrome: default startup type stays DEFAULT (about:blank via
++  // the NTP factory), never "continue where you left off".
+ #endif
+   return SessionStartupPref::DEFAULT;
+ #endif
+diff --git a/chrome/browser/profiles/profile_impl.cc b/chrome/browser/profiles/profile_impl.cc
+index f3ca43e49d..d7c25d9325 100644
+--- a/chrome/browser/profiles/profile_impl.cc
++++ b/chrome/browser/profiles/profile_impl.cc
+@@ -419,8 +419,10 @@ void ProfileImpl::RegisterProfilePrefs(
+ #endif
+   registry->RegisterStringPref(prefs::kHomePage, std::string(),
+                                home_page_flags);
++  // unsafe-chrome: NTP goes to about:blank by default (policy-pref
++  // default value changed; startup tab, new tab and ctrl+t all follow).
+   registry->RegisterStringPref(prefs::kNewTabPageLocationOverride,
+-                               std::string());
++                               "about:blank");
+ 
+ #if BUILDFLAG(ENABLE_PRINTING)
+   registry->RegisterBooleanPref(prefs::kPrintingEnabled, true);
+diff --git a/chrome/browser/sessions/session_service.cc b/chrome/browser/sessions/session_service.cc
+index db000e3621..6e2147ac0b 100644
+--- a/chrome/browser/sessions/session_service.cc
++++ b/chrome/browser/sessions/session_service.cc
+@@ -609,10 +609,8 @@ bool SessionService::RestoreIfNecessary(const StartupTabs& startup_tabs,
+                                     /*restore_tabbed_browser=*/true);
+       return true;
+     } else {
+-      // If 'browser' is not null, show the crash bubble in the current browser
+-      // instance.
+-      SessionCrashedBubble::ShowIfNotOffTheRecordProfile(
+-          browser, /*skip_tab_checking=*/true);
++      // unsafe-chrome: no crash-restore bubble from the session-service
++      // path either (second call site besides startup infobar_utils).
+       ProfileLaunchObserver::AddLaunched(profile());
+     }
+ #endif  // BUILDFLAG(IS_CHROMEOS)
+diff --git a/chrome/browser/ui/browser_tabstrip.cc b/chrome/browser/ui/browser_tabstrip.cc
+index 0b4f8241e9..fd12da7ca2 100644
+--- a/chrome/browser/ui/browser_tabstrip.cc
++++ b/chrome/browser/ui/browser_tabstrip.cc
+@@ -36,9 +36,9 @@ content::WebContents* AddAndReturnTabAt(
+   // WebContents, but we want to include the time it takes to create the
+   // WebContents object too.
+   base::TimeTicks new_tab_start_time = base::TimeTicks::Now();
+-  const GURL resolved_url =
+-      url.is_empty() ? browser->GetBrowserForMigrationOnly()->GetNewTabURL()
+-                     : url;
++  // unsafe-chrome: any implicitly-created tab (startup, new-tab button,
++  // ctrl+t) opens about:blank instead of the new tab page.
++  const GURL resolved_url = url.is_empty() ? GURL("about:blank") : url;
+   NavigateParams params(browser, resolved_url, ui::PAGE_TRANSITION_TYPED);
+   params.disposition = foreground ? WindowOpenDisposition::NEW_FOREGROUND_TAB
+                                   : WindowOpenDisposition::NEW_BACKGROUND_TAB;
+diff --git a/chrome/browser/ui/startup/infobar_utils.cc b/chrome/browser/ui/startup/infobar_utils.cc
+index 4907b9a951..5d4a8f916e 100644
+--- a/chrome/browser/ui/startup/infobar_utils.cc
++++ b/chrome/browser/ui/startup/infobar_utils.cc
+@@ -145,15 +145,9 @@ void AddInfoBarsIfNecessary(BrowserWindowInterface* browser,
+     return;
+   }
+ 
+-  // Web apps should not display the session restore bubble (crbug.com/40800614)
+-  const bool should_display_bubble =
+-      !is_web_app && HasPendingUncleanExit(browser->GetProfile());
+-  base::UmaHistogramBoolean("Startup.CrashBubbleShown", should_display_bubble);
+-  if (should_display_bubble) {
+-    SessionCrashedBubble::ShowIfNotOffTheRecordProfile(
+-        browser,
+-        /*skip_tab_checking=*/false);
+-  }
++  // unsafe-chrome: never show the "restore pages?" crash bubble in this
++  // local automation build (block replaced; HasPendingUncleanExit stays
++  // defined elsewhere so no unused-function fallout).
+ 
+   // These info bars are not shown when the browser is being controlled by
+   // automated tests, so that they don't interfere with tests that assume no
+@@ -182,30 +176,15 @@ void AddInfoBarsIfNecessary(BrowserWindowInterface* browser,
+     ShowBadFlagsPrompt(web_contents);
+   }
+ 
+-  infobars::ContentInfoBarManager* infobar_manager =
+-      infobars::ContentInfoBarManager::FromWebContents(web_contents);
+-
+-  if (!google_apis::HasAPIKeyConfigured()) {
+-    GoogleApiKeysInfoBarDelegate::Create(infobar_manager);
+-  }
+-
+-  if (ObsoleteSystem::IsObsoleteNowOrSoon()) {
+-    PrefService* local_state = g_browser_process->local_state();
+-    if (!local_state ||
+-        !local_state->GetBoolean(prefs::kSuppressUnsupportedOSWarning)) {
+-      ObsoleteSystemInfoBarDelegate::Create(infobar_manager);
+-    }
+-  }
++  // unsafe-chrome: no API-keys / obsolete-OS startup infobars in this
++  // local automation build (upstream block replaced; early return is
++  // forbidden by -Wunreachable-code, and later code shares this scope).
+ 
+-  OSCryptAsyncAvailabilityInfoBarDelegate::MaybeCreate(browser);
++  // unsafe-chrome: no OSCrypt-migration startup infobar (call replaced).
+ 
+ #if BUILDFLAG(IS_WIN)
+-  if (auto* startup_launch_manager =
+-          StartupLaunchManager::From(g_browser_process)) {
+-    startup_launch_manager->SetInfoBarManager(
+-        std::make_unique<StartupLaunchInfoBarManagerImpl>());
+-    startup_launch_manager->MaybeShowInfoBars();
+-  }
++  // unsafe-chrome: no startup-launch (default-browser / pin) infobars
++  // (block replaced).
+ #endif
+ 
+ #if BUILDFLAG(IS_WIN) && BUILDFLAG(GOOGLE_CHROME_BRANDING)
+@@ -223,12 +202,7 @@ void AddInfoBarsIfNecessary(BrowserWindowInterface* browser,
+   }
+ 
+ #if BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
+-  if (base::FeatureList::IsEnabled(features::kSessionRestoreInfobar)) {
+-    auto* session_restore_infobar_controller =
+-        session_restore_infobar::SessionRestoreInfobarController::From(browser);
+-    session_restore_infobar_controller->MaybeShowInfoBar(*profile,
+-                                                         is_post_crash_launch);
+-  }
++  // unsafe-chrome: no session-restore infobar (block replaced).
+ #endif  // BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
+ 
+   // The default browser prompt should only be shown after the first run.
+diff --git a/chrome/common/chrome_switches.cc b/chrome/common/chrome_switches.cc
+index 17f8094a74..b0403ac79c 100644
+--- a/chrome/common/chrome_switches.cc
++++ b/chrome/common/chrome_switches.cc
+@@ -89,6 +89,10 @@ const char kAppsGalleryUpdateURL[] = "apps-gallery-update-url";
+ // Allowlist for Negotiate Auth servers
+ const char kAuthServerAllowlist[] = "auth-server-allowlist";
+ 
++// Automatically accepts incoming remote debugging connections without showing
++// the consent dialog. Local automation builds only; never send upstream.
++const char kAutoAllowDevtoolsConnections[] = "auto-allow-devtools-connections";
++
+ // This flag makes Chrome auto-open DevTools window for each tab. It is
+ // intended to be used by developers and automation to not require user
+ // interaction for opening DevTools.
+diff --git a/chrome/common/chrome_switches.h b/chrome/common/chrome_switches.h
+index f35446f0ce..b5275954b6 100644
+--- a/chrome/common/chrome_switches.h
++++ b/chrome/common/chrome_switches.h
+@@ -53,6 +53,7 @@ extern const char kAppRunOnOsLoginMode[];
+ extern const char kAppShim[];
+ extern const char kAppsGalleryUpdateURL[];
+ extern const char kAuthServerAllowlist[];
++extern const char kAutoAllowDevtoolsConnections[];
+ extern const char kAutoOpenDevToolsForTabs[];
+ extern const char kAutoSelectDesktopCaptureSource[];
+ extern const char kAutoSelectScreenCaptureSource[];
+diff --git a/chrome/common/webui_url_constants.cc b/chrome/common/webui_url_constants.cc
+index 3aaa4aaa4b..38533b2fc3 100644
+--- a/chrome/common/webui_url_constants.cc
++++ b/chrome/common/webui_url_constants.cc
+@@ -349,7 +349,9 @@ const GURL& ChromeUINewTabPageURLAsGURL() {
+ }
+ 
+ const GURL& ChromeUINewTabURLAsGURL() {
+-  static base::NoDestructor<GURL> instance(kChromeUINewTabURL);
++  // unsafe-chrome: chrome://newtab resolves to about:blank everywhere
++  // (startup tab, first-run, NTP provider tabs) in this local build.
++  static base::NoDestructor<GURL> instance(GURL("about:blank"));
+   return *instance;
+ }
+ 
+diff --git a/components/omnibox/browser/aim_eligibility_service_features.cc b/components/omnibox/browser/aim_eligibility_service_features.cc
+index 89d1205f90..88d7a1bcce 100644
+--- a/components/omnibox/browser/aim_eligibility_service_features.cc
++++ b/components/omnibox/browser/aim_eligibility_service_features.cc
+@@ -8,7 +8,8 @@
+ 
+ namespace omnibox {
+ 
+-BASE_FEATURE(kAimEnabled, base::FEATURE_ENABLED_BY_DEFAULT);
++// unsafe-chrome: omnibox AI Mode off by default (local automation build).
++BASE_FEATURE(kAimEnabled, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ BASE_FEATURE(kAimServerEligibilityEnabled, base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+diff --git a/components/search_engines/template_url_service.cc b/components/search_engines/template_url_service.cc
+index 5c461210b9..8b71386c03 100644
+--- a/components/search_engines/template_url_service.cc
++++ b/components/search_engines/template_url_service.cc
+@@ -646,7 +646,9 @@ void TemplateURLService::RegisterProfilePrefs(
+     user_prefs::PrefRegistrySyncable* registry) {
+   registry->RegisterStringPref(prefs::kDefaultSearchProviderGUID,
+                                std::string());
+-  registry->RegisterBooleanPref(prefs::kDefaultSearchProviderEnabled, true);
++  // unsafe-chrome: omnibox does not fall back to Google search by
++  // default (existing profiles keep their persisted value).
++  registry->RegisterBooleanPref(prefs::kDefaultSearchProviderEnabled, false);
+   registry->RegisterBooleanPref(
+       prefs::kDefaultSearchProviderContextMenuAccessAllowed, true);
+ }
