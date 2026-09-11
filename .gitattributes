@@ -1,0 +1,3 @@
+# poc 参照树与 patch 文件字节保真,禁行尾转换
+poc/** -text
+*.patch -text

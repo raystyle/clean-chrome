@@ -1,0 +1,47 @@
+diff --git a/chrome/common/chrome_switches.h b/chrome/common/chrome_switches.h
+index f35446f..b527595 100644
+--- a/chrome/common/chrome_switches.h
++++ b/chrome/common/chrome_switches.h
+@@ -53,6 +53,7 @@ extern const char kAppRunOnOsLoginMode[];
+ extern const char kAppShim[];
+ extern const char kAppsGalleryUpdateURL[];
+ extern const char kAuthServerAllowlist[];
++extern const char kAutoAllowDevtoolsConnections[];
+ extern const char kAutoOpenDevToolsForTabs[];
+ extern const char kAutoSelectDesktopCaptureSource[];
+ extern const char kAutoSelectScreenCaptureSource[];
+diff --git a/chrome/common/chrome_switches.cc b/chrome/common/chrome_switches.cc
+index 17f8094..b0403ac 100644
+--- a/chrome/common/chrome_switches.cc
++++ b/chrome/common/chrome_switches.cc
+@@ -89,6 +89,10 @@ const char kAppsGalleryUpdateURL[] = "apps-gallery-update-url";
+ // Allowlist for Negotiate Auth servers
+ const char kAuthServerAllowlist[] = "auth-server-allowlist";
+ 
++// Automatically accepts incoming remote debugging connections without showing
++// the consent dialog. Local automation builds only; never send upstream.
++const char kAutoAllowDevtoolsConnections[] = "auto-allow-devtools-connections";
++
+ // This flag makes Chrome auto-open DevTools window for each tab. It is
+ // intended to be used by developers and automation to not require user
+ // interaction for opening DevTools.
+diff --git a/chrome/browser/devtools/chrome_devtools_manager_delegate.cc b/chrome/browser/devtools/chrome_devtools_manager_delegate.cc
+index c9f49cd..1ad759e 100644
+--- a/chrome/browser/devtools/chrome_devtools_manager_delegate.cc
++++ b/chrome/browser/devtools/chrome_devtools_manager_delegate.cc
+@@ -518,6 +518,15 @@ void ChromeDevToolsManagerDelegate::UpdateDeviceDiscovery() {
+ }
+ 
+ void ChromeDevToolsManagerDelegate::AcceptDebugging(AcceptCallback callback) {
++  // --auto-allow-devtools-connections: skip the consent dialog, accept every
++  // incoming remote debugging connection. Local automation build only.
++  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
++          switches::kAutoAllowDevtoolsConnections)) {
++    std::move(callback).Run(
++        content::DevToolsManagerDelegate::AcceptConnectionResult::kAllow);
++    return;
++  }
++
+   auto wrapped_callback = base::BindOnce(
+       [](AcceptCallback inner_callback,
+          content::DevToolsManagerDelegate::AcceptConnectionResult result) {

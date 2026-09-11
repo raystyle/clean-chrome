@@ -1,0 +1,16 @@
+# args.gn for unsafe-chrome (verified against tag 152.0.7977.84)
+# Copy to src/out/Release/args.gn  (or: gn args out\Release)
+#
+# NOTE: enable_nacl is GONE upstream (~M14x) — do not add it, gn gen will fail
+# on the unknown argument. NaCl was removed from Chromium.
+
+is_debug = false
+is_component_build = false
+is_official_build = false
+symbol_level = 0
+blink_symbol_level = 0
+v8_symbol_level = 0
+
+# For faster link iteration during development you can temporarily switch to:
+#   is_component_build = true
+# Ship the non-component build above.

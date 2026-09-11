@@ -1,0 +1,19 @@
+# 智能体本地配置
+.claude/settings.local.json
+
+# 源码检出与构建产物(体积巨大,绝不入仓)
+chromium/
+out/
+*.exe
+*.dll
+*.pdb
+
+# 运行垃圾
+*.log
+tmp/
+E:\tmp\cdp-dev
+
+# 密钥与本地环境
+*.key
+*.pem
+.env
