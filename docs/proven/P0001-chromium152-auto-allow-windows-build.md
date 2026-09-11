@@ -2,7 +2,7 @@
 
 > 本机（Windows）编译带 `--auto-allow-devtools-connections` 的 Chromium 并验证生效。落点：本文件。进行中与否以 TODO.md 为准。
 
-- 状态：进行中
+- 状态：Dev 验收全绿（2026-09-11）；Release 分发产物待编（R001 五节顺序的后半）
 - 日期：2026-09-11
 - 关联：PRD D02；S001（研究与补丁）；R001（操作手册）；PLAN/TODO
 
@@ -39,8 +39,12 @@ agent 自动化附着本机浏览器时被 DevTools 确认对话框打断；上�
 
 > 完成时回填。
 
-- 研究与补丁阶段已完成（S001 验证记录），构建未开始
-- （待回填）
+- 研究与补丁阶段（S001 验证记录）
+- 2026-09-11：E 盘故障（M005）项目平移 C:；fetch 因直连强干扰（M007）12 轮全灭,改道替代路线（aria2 x16 codeload tarball 1.4GB + GitHub SSH 归化官方 tag 对象,详见 R001 三节）;依赖 gclient sync 循环+陪跑自愈拉齐（20.5GB）
+- 三大环境坑当日全踩当日全修：pip.ini BOM 炸 venv（M008）、系统 GOROOT 污染 dawn 项目内 go（M009）、Defender 未排除致 git add 21 文件/秒（R001 预检实证）
+- 首编：`-j 32` 在 64GB RAM 机器 OOM 被杀,降 `-j 16` 稳定跑完;净编译约 4.5 小时（含 blink/v8 巨型 obj 段）,产物 `out\Dev` 约 20GB
+- 验收四条全绿（out\Dev）:findstr 开关入 chrome.dll;`/json/version` 返回 Chrome/152.0.7977.84;**WS 握手 10ms 秒通（无确认对话框,auto-allow 短路生效的直接证据）**;WS 会话 JSON-RPC 双向响应
+- 经验沉淀:tools\net-probe.py（uv 运行全平台网络评估）;R001 新增替代路线节;坑表 11-15
 
 ## 验收标准
 

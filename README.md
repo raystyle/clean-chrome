@@ -9,10 +9,10 @@
 docs\references\R001-chromium-build-操作手册.md
 
 # 2 打补丁(锚定式,幂等)
-patches\apply-auto-allow.ps1 -SrcRoot E:\unsafe-chrome\chromium\src
+patches\apply-auto-allow.ps1 -SrcRoot C:\unsafe-chrome\chromium\src
 
 # 3 运行
-out\Release\chrome.exe --user-data-dir=E:\tmp\cdp-dev --remote-debugging-port=9222 --auto-allow-devtools-connections
+out\Release\chrome.exe --user-data-dir=C:\tmp\cdp-dev --remote-debugging-port=9222 --auto-allow-devtools-connections
 ```
 
 ## 研究结论速览
@@ -34,9 +34,14 @@ out\Release\chrome.exe --user-data-dir=E:\tmp\cdp-dev --remote-debugging-port=92
 ```
 patches\    补丁双形态(apply-auto-allow.ps1 锚定式 + 钉 tag 的 .patch,两者等价)
 args.gn     GN 参数唯一权威
+tools\      uv 运行 PEP 723 全平台工具(net-probe.py 网络通道评估)
 poc\        S001 验证参照树(152 原始与补丁后文件,只读)
 docs\       proven(方案) research(研究) references(操作手册) guide(规范) mistakes(错误库) diary(日记)
 ```
+
+## 当前状态
+
+- 2026-09-11 Windows 侧 Dev 构建验收全绿：自编 152 带 `--auto-allow-devtools-connections` 零对话框,bh 端到端附着可用（`BH_CDP_URL=http://127.0.0.1:9222`）;Release 分发产物待编。进度详见 GOAL/TODO
 
 项目状态与下一步见 `GOAL.md` 与 `TODO.md`；当前目标 P0001（Windows 构建，进行中）。
 

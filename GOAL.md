@@ -20,12 +20,14 @@
 
 ## 进程
 
-- 当前目标：D02 Windows 构建（**挂起：等用户迁移项目目录**）
-- 已完成：git 六条全局配置；depot_tools 就位（用户 PATH 前插 + `DEPOT_TOOLS_WIN_TOOLCHAIN=0`）；增量编译双目录策略定档
-- 2026-09-11 批次三：E: 盘（外置 USB SSD，exFAT，`Full Repair Needed`）反复掉线，fetch 与 VS 安装器下载均毁（M005）；用户裁定「等我迁移」，迁移完成后从 task #6（VS 安装）与 task #7（fetch，新目录）接续
-- 环境待办：VS 2026 安装（bootstrap 重新下载，勿用 E: 盘上残留文件）；源码 checkout 落内置 NTFS 盘（R001 路径届时同步）
+- 当前目标：D02 Windows 构建：**Dev 验收全绿达成（2026-09-11 晚）**；余项 Release 分发产物（args 照 R001 五节全编一次）
+- 网络受阻全程破局：googlesource/git-https/SSH 大流量均被间歇掐断（M007），改道 aria2x16 codeload tarball（1.4GB,103Mbps）+ GitHub SSH 归化官方 tag 对象 + gclient 循环与陪跑自愈拉齐 300+ 依赖仓（20.5GB）+ insteadOf 镜像注入（skia/devtools-frontend/quiche）
+- 环境坑当日全修：pip.ini BOM（M008）、系统 GOROOT 污染 dawn 内置 go（M009）、Defender 排除、-j32 OOM 降 j16
+- 验收四条全绿：findstr 开关入 chrome.dll；CDP HTTP 端点 152；WS 握手 10ms 零对话框（auto-allow 短路生效直接证据）；bh 附着（BH_CDP_URL）js() 页面执行通
+- 新工具：tools\net-probe.py（uv 全平台网络评估）；R001 增替代路线节与坑表 11-15
 
 ## 历史
 
 | 日期 | 目标 | 结果 |
 | --- | --- | --- |
+| 2026-09-11 | D02 Windows 构建（Dev 验收） | 全绿：自编 chrome.exe/dll 带开关零弹窗,bh 端到端附着通;Release 分发产物待编 |

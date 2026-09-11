@@ -15,6 +15,7 @@
 | 协作规则 | `AGENTS.md`（`CLAUDE.md` 一行桥接） | 唯一权威源 |
 | 补丁 | `patches\apply-auto-allow.ps1` | 锚定式补丁脚本（默认用，幂等） |
 | 补丁 | `patches\auto-allow-devtools-connections-152.0.7977.84.patch` | 钉 tag 标准补丁 |
+| 工具 | `tools\net-probe.py` | 网络通道稳定性评估（uv 运行 PEP 723,全平台,见 R001 替代路线） |
 | 构建 | `args.gn` | GN 参数唯一权威（enable_nacl 已删勿写） |
 | 验证产物 | `poc\S001-chromium152-auto-allow\` | 152 原始/补丁后参照树（orig/base/patched，只读） |
 | 文档 | `docs\`（proven/diary/research/references/guide/mistakes） | 六目录 |
@@ -57,6 +58,7 @@
 | 编号 | 分类文件 | 覆盖关键词 | 行级编号段 |
 | --- | --- | --- | --- |
 | M001-M004 | `docs\mistakes\MISTAKES.md`（单文件） | PowerShell here-string、char Replace、git diff --no-index、autocrlf | M001 至 M004 |
+| M005-M008 | `docs\mistakes\MISTAKES.md`（单文件） | 外置盘掉线、停 fetch 残留清场、直连间歇阻断与低速超时、pip.ini BOM 与 GIT_CONFIG_COUNT | M005 至 M008 |
 
 ## 九、阶段与版本
 
