@@ -1,5 +1,5 @@
 diff --git a/chrome/browser/devtools/chrome_devtools_manager_delegate.cc b/chrome/browser/devtools/chrome_devtools_manager_delegate.cc
-index c9f49cd198..3341165538 100644
+index c9f49cd198..51778181cd 100644
 --- a/chrome/browser/devtools/chrome_devtools_manager_delegate.cc
 +++ b/chrome/browser/devtools/chrome_devtools_manager_delegate.cc
 @@ -518,6 +518,15 @@ void ChromeDevToolsManagerDelegate::UpdateDeviceDiscovery() {
@@ -33,14 +33,14 @@ index c9f49cd198..3341165538 100644
 -    delegate->AddObserver(this);
 -    infobar_ = GlobalConfirmInfoBar::Show(std::move(delegate));
 -  }
-+  // unsafe-chrome: never show the "remote debugging active" infobar in
++  // clean-chrome: never show the "remote debugging active" infobar in
 +  // this local automation build. (Upstream show/close block replaced;
 +  // -Wunreachable-code forbids an early return here.)
  }
  
  void ChromeDevToolsManagerDelegate::OnAccept() {
 diff --git a/chrome/browser/devtools/remote_debugging_server.cc b/chrome/browser/devtools/remote_debugging_server.cc
-index ea5ffb9a23..37b2dd68e5 100644
+index ea5ffb9a23..0bb6702927 100644
 --- a/chrome/browser/devtools/remote_debugging_server.cc
 +++ b/chrome/browser/devtools/remote_debugging_server.cc
 @@ -167,18 +167,10 @@ IsRemoteDebuggingAllowed(const std::optional<bool>& is_default_user_data_dir,
@@ -59,7 +59,7 @@ index ea5ffb9a23..37b2dd68e5 100644
 -    return base::unexpected(
 -        RemoteDebuggingServer::NotStartedReason::kDisabledByDefaultUserDataDir);
 -  }
-+  // unsafe-chrome: restriction removed -- the default user data dir
++  // clean-chrome: restriction removed -- the default user data dir
 +  // carries no remote-debugging restriction in this local automation
 +  // build. (Upstream gate block + flag definition replaced; an early
 +  // return here would hit -Wunreachable-code.)
@@ -71,7 +71,7 @@ index ea5ffb9a23..37b2dd68e5 100644
    std::string port_str =
        command_line.GetSwitchValueASCII(::switches::kRemoteDebuggingPort);
 +
-+  // unsafe-chrome: open the debugging port on 9222 by default when launched
++  // clean-chrome: open the debugging port on 9222 by default when launched
 +  // without --remote-debugging-port (local automation build only).
 +  if (port_str.empty()) {
 +    port_str = "9222";
@@ -80,7 +80,7 @@ index ea5ffb9a23..37b2dd68e5 100644
      base::FilePath output_dir;
      if (*port == 0) {
 diff --git a/chrome/browser/prefs/session_startup_pref.cc b/chrome/browser/prefs/session_startup_pref.cc
-index dd071315ef..c9d33a2f46 100644
+index dd071315ef..974639e011 100644
 --- a/chrome/browser/prefs/session_startup_pref.cc
 +++ b/chrome/browser/prefs/session_startup_pref.cc
 @@ -71,9 +71,8 @@ SessionStartupPref::Type SessionStartupPref::GetDefaultStartupType() {
@@ -90,20 +90,38 @@ index dd071315ef..c9d33a2f46 100644
 -  if (features::kSetDefaultToContinueSession.Get()) {
 -    return SessionStartupPref::LAST;
 -  }
-+  // unsafe-chrome: default startup type stays DEFAULT (about:blank via
++  // clean-chrome: default startup type stays DEFAULT (about:blank via
 +  // the NTP factory), never "continue where you left off".
  #endif
    return SessionStartupPref::DEFAULT;
  #endif
+diff --git a/chrome/browser/profiles/profile.cc b/chrome/browser/profiles/profile.cc
+index 3704d410b7..8b337e1201 100644
+--- a/chrome/browser/profiles/profile.cc
++++ b/chrome/browser/profiles/profile.cc
+@@ -335,9 +335,12 @@ const char Profile::kProfileKey[] = "__PROFILE__";
+ 
+ // static
+ void Profile::RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
++  // clean-chrome: search suggestions off -- kills omnibox zero-suggest
++  // prefetch to google.com/complete/search and SearchEnginePreconnector
++  // startup preconnects (S004).
+   registry->RegisterBooleanPref(
+       prefs::kSearchSuggestEnabled,
+-      true,
++      false,
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+ #if BUILDFLAG(IS_ANDROID)
+   registry->RegisterStringPref(
 diff --git a/chrome/browser/profiles/profile_impl.cc b/chrome/browser/profiles/profile_impl.cc
-index f3ca43e49d..d7c25d9325 100644
+index f3ca43e49d..c37bee5072 100644
 --- a/chrome/browser/profiles/profile_impl.cc
 +++ b/chrome/browser/profiles/profile_impl.cc
 @@ -419,8 +419,10 @@ void ProfileImpl::RegisterProfilePrefs(
  #endif
    registry->RegisterStringPref(prefs::kHomePage, std::string(),
                                 home_page_flags);
-+  // unsafe-chrome: NTP goes to about:blank by default (policy-pref
++  // clean-chrome: NTP goes to about:blank by default (policy-pref
 +  // default value changed; startup tab, new tab and ctrl+t all follow).
    registry->RegisterStringPref(prefs::kNewTabPageLocationOverride,
 -                               std::string());
@@ -111,8 +129,24 @@ index f3ca43e49d..d7c25d9325 100644
  
  #if BUILDFLAG(ENABLE_PRINTING)
    registry->RegisterBooleanPref(prefs::kPrintingEnabled, true);
+diff --git a/chrome/browser/safe_browsing/download_protection/download_protection_delegate_desktop.cc b/chrome/browser/safe_browsing/download_protection/download_protection_delegate_desktop.cc
+index e174a588b3..8eb8ba516b 100644
+--- a/chrome/browser/safe_browsing/download_protection/download_protection_delegate_desktop.cc
++++ b/chrome/browser/safe_browsing/download_protection/download_protection_delegate_desktop.cc
+@@ -23,8 +23,10 @@
+ namespace safe_browsing {
+ namespace {
+ 
++// clean-chrome: download/file scanning (binary verdict requests)
++// endpoint unreachable (S004).
+ const char kDownloadRequestUrl[] =
+-    "https://sb-ssl.google.com/safebrowsing/clientreport/download";
++    "https://sb.invalid/safebrowsing/clientreport/download";
+ 
+ // Content-Type HTTP header field for the request.
+ const char kCheckClientDownloadRequestContentType[] =
 diff --git a/chrome/browser/sessions/session_service.cc b/chrome/browser/sessions/session_service.cc
-index db000e3621..6e2147ac0b 100644
+index db000e3621..e9466dea10 100644
 --- a/chrome/browser/sessions/session_service.cc
 +++ b/chrome/browser/sessions/session_service.cc
 @@ -609,10 +609,8 @@ bool SessionService::RestoreIfNecessary(const StartupTabs& startup_tabs,
@@ -123,13 +157,30 @@ index db000e3621..6e2147ac0b 100644
 -      // instance.
 -      SessionCrashedBubble::ShowIfNotOffTheRecordProfile(
 -          browser, /*skip_tab_checking=*/true);
-+      // unsafe-chrome: no crash-restore bubble from the session-service
++      // clean-chrome: no crash-restore bubble from the session-service
 +      // path either (second call site besides startup infobar_utils).
        ProfileLaunchObserver::AddLaunched(profile());
      }
  #endif  // BUILDFLAG(IS_CHROMEOS)
+diff --git a/chrome/browser/spellchecker/spellcheck_hunspell_dictionary.cc b/chrome/browser/spellchecker/spellcheck_hunspell_dictionary.cc
+index f2a1050455..ab1b2e1ddf 100644
+--- a/chrome/browser/spellchecker/spellcheck_hunspell_dictionary.cc
++++ b/chrome/browser/spellchecker/spellcheck_hunspell_dictionary.cc
+@@ -277,8 +277,11 @@ GURL SpellcheckHunspellDictionary::GetDictionaryURL() {
+   std::string bdict_file = dictionary_file_.path.BaseName().MaybeAsASCII();
+   DCHECK(!bdict_file.empty());
+ 
++  // clean-chrome: hunspell dictionary downloads disabled -- the zh-CN
++  // .bdic fetch on Chinese-locale systems was the gvt1.com touchpoint
++  // (S004).
+   static const char kDownloadServerUrl[] =
+-      "https://redirector.gvt1.com/edgedl/chrome/dict/";
++      "https://dict.invalid/edgedl/chrome/dict/";
+ 
+   return GURL(std::string(kDownloadServerUrl) +
+               base::ToLowerASCII(bdict_file));
 diff --git a/chrome/browser/ui/browser_tabstrip.cc b/chrome/browser/ui/browser_tabstrip.cc
-index 0b4f8241e9..fd12da7ca2 100644
+index 0b4f8241e9..0112d365b5 100644
 --- a/chrome/browser/ui/browser_tabstrip.cc
 +++ b/chrome/browser/ui/browser_tabstrip.cc
 @@ -36,9 +36,9 @@ content::WebContents* AddAndReturnTabAt(
@@ -139,14 +190,30 @@ index 0b4f8241e9..fd12da7ca2 100644
 -  const GURL resolved_url =
 -      url.is_empty() ? browser->GetBrowserForMigrationOnly()->GetNewTabURL()
 -                     : url;
-+  // unsafe-chrome: any implicitly-created tab (startup, new-tab button,
++  // clean-chrome: any implicitly-created tab (startup, new-tab button,
 +  // ctrl+t) opens about:blank instead of the new tab page.
 +  const GURL resolved_url = url.is_empty() ? GURL("about:blank") : url;
    NavigateParams params(browser, resolved_url, ui::PAGE_TRANSITION_TYPED);
    params.disposition = foreground ? WindowOpenDisposition::NEW_FOREGROUND_TAB
                                    : WindowOpenDisposition::NEW_BACKGROUND_TAB;
+diff --git a/chrome/browser/ui/browser_ui_prefs.cc b/chrome/browser/ui/browser_ui_prefs.cc
+index 7b0257c24d..d0085a3d53 100644
+--- a/chrome/browser/ui/browser_ui_prefs.cc
++++ b/chrome/browser/ui/browser_ui_prefs.cc
+@@ -138,8 +138,10 @@ void RegisterBrowserUserPrefs(user_prefs::PrefRegistrySyncable* registry) {
+   registry->RegisterBooleanPref(prefs::kWebAppCreateOnDesktop, true);
+   registry->RegisterBooleanPref(prefs::kWebAppCreateInAppsMenu, true);
+   registry->RegisterBooleanPref(prefs::kWebAppCreateInQuickLaunchBar, true);
++  // clean-chrome: never offer Google Translate (right-click translate
++  // included); S004.
+   registry->RegisterBooleanPref(
+-      translate::prefs::kOfferTranslateEnabled, true,
++      translate::prefs::kOfferTranslateEnabled, false,
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+   registry->RegisterDictionaryPref(prefs::kBrowserWindowPlacement);
+   registry->RegisterDictionaryPref(prefs::kBrowserWindowPlacementPopup);
 diff --git a/chrome/browser/ui/startup/infobar_utils.cc b/chrome/browser/ui/startup/infobar_utils.cc
-index 4907b9a951..5d4a8f916e 100644
+index 4907b9a951..0f41ce46c9 100644
 --- a/chrome/browser/ui/startup/infobar_utils.cc
 +++ b/chrome/browser/ui/startup/infobar_utils.cc
 @@ -145,15 +145,9 @@ void AddInfoBarsIfNecessary(BrowserWindowInterface* browser,
@@ -162,7 +229,7 @@ index 4907b9a951..5d4a8f916e 100644
 -        browser,
 -        /*skip_tab_checking=*/false);
 -  }
-+  // unsafe-chrome: never show the "restore pages?" crash bubble in this
++  // clean-chrome: never show the "restore pages?" crash bubble in this
 +  // local automation build (block replaced; HasPendingUncleanExit stays
 +  // defined elsewhere so no unused-function fallout).
  
@@ -186,12 +253,12 @@ index 4907b9a951..5d4a8f916e 100644
 -      ObsoleteSystemInfoBarDelegate::Create(infobar_manager);
 -    }
 -  }
-+  // unsafe-chrome: no API-keys / obsolete-OS startup infobars in this
++  // clean-chrome: no API-keys / obsolete-OS startup infobars in this
 +  // local automation build (upstream block replaced; early return is
 +  // forbidden by -Wunreachable-code, and later code shares this scope).
  
 -  OSCryptAsyncAvailabilityInfoBarDelegate::MaybeCreate(browser);
-+  // unsafe-chrome: no OSCrypt-migration startup infobar (call replaced).
++  // clean-chrome: no OSCrypt-migration startup infobar (call replaced).
  
  #if BUILDFLAG(IS_WIN)
 -  if (auto* startup_launch_manager =
@@ -200,7 +267,7 @@ index 4907b9a951..5d4a8f916e 100644
 -        std::make_unique<StartupLaunchInfoBarManagerImpl>());
 -    startup_launch_manager->MaybeShowInfoBars();
 -  }
-+  // unsafe-chrome: no startup-launch (default-browser / pin) infobars
++  // clean-chrome: no startup-launch (default-browser / pin) infobars
 +  // (block replaced).
  #endif
  
@@ -215,12 +282,12 @@ index 4907b9a951..5d4a8f916e 100644
 -    session_restore_infobar_controller->MaybeShowInfoBar(*profile,
 -                                                         is_post_crash_launch);
 -  }
-+  // unsafe-chrome: no session-restore infobar (block replaced).
++  // clean-chrome: no session-restore infobar (block replaced).
  #endif  // BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
  
    // The default browser prompt should only be shown after the first run.
 diff --git a/chrome/browser/ui/ui_features.cc b/chrome/browser/ui/ui_features.cc
-index 05e8b37464..514e2ab4be 100644
+index 05e8b37464..37f27c8f5f 100644
 --- a/chrome/browser/ui/ui_features.cc
 +++ b/chrome/browser/ui/ui_features.cc
 @@ -124,7 +124,9 @@ BASE_FEATURE(kExtensionsPinnedByDefault, base::FEATURE_DISABLED_BY_DEFAULT);
@@ -228,7 +295,7 @@ index 05e8b37464..514e2ab4be 100644
  // Shows an infobar on PDFs offering to become the default PDF viewer if Chrome
  // isn't the default already.
 -BASE_FEATURE(kPdfInfoBar, base::FEATURE_ENABLED_BY_DEFAULT);
-+// unsafe-chrome: never offer to become the default PDF viewer
++// clean-chrome: never offer to become the default PDF viewer
 +// (local automation build).
 +BASE_FEATURE(kPdfInfoBar, base::FEATURE_DISABLED_BY_DEFAULT);
  
@@ -262,7 +329,7 @@ index f35446f0ce..b5275954b6 100644
  extern const char kAutoSelectDesktopCaptureSource[];
  extern const char kAutoSelectScreenCaptureSource[];
 diff --git a/chrome/common/webui_url_constants.cc b/chrome/common/webui_url_constants.cc
-index 3aaa4aaa4b..38533b2fc3 100644
+index 3aaa4aaa4b..8eed704dc3 100644
 --- a/chrome/common/webui_url_constants.cc
 +++ b/chrome/common/webui_url_constants.cc
 @@ -349,7 +349,9 @@ const GURL& ChromeUINewTabPageURLAsGURL() {
@@ -270,14 +337,74 @@ index 3aaa4aaa4b..38533b2fc3 100644
  
  const GURL& ChromeUINewTabURLAsGURL() {
 -  static base::NoDestructor<GURL> instance(kChromeUINewTabURL);
-+  // unsafe-chrome: chrome://newtab resolves to about:blank everywhere
++  // clean-chrome: chrome://newtab resolves to about:blank everywhere
 +  // (startup tab, first-run, NTP provider tabs) in this local build.
 +  static base::NoDestructor<GURL> instance(GURL("about:blank"));
    return *instance;
  }
  
+diff --git a/components/component_updater/component_updater_url_constants.cc b/components/component_updater/component_updater_url_constants.cc
+index 95c0d48942..ced28e9722 100644
+--- a/components/component_updater/component_updater_url_constants.cc
++++ b/components/component_updater/component_updater_url_constants.cc
+@@ -14,10 +14,13 @@ namespace component_updater {
+ //
+ // The value of |kDefaultUrlSource| can be overridden with
+ // --component-updater=url-source=someurl.
++// clean-chrome: component updater endpoints unreachable -- kills
++// update2/json checks, the CUP time service and dl.google.com
++// diffgen-puffin downloads (S004).
+ const char kUpdaterJSONDefaultUrl[] =
+-    "https://update.googleapis.com/service/update2/json";
++    "https://update.invalid/service/update2/json";
+ 
+ const char kUpdaterJSONFallbackUrl[] =
+-    "http://update.googleapis.com/service/update2/json";
++    "http://update.invalid/service/update2/json";
+ 
+ }  // namespace component_updater
+diff --git a/components/lens/lens_features.cc b/components/lens/lens_features.cc
+index 22005a4f59..81f820fe7b 100644
+--- a/components/lens/lens_features.cc
++++ b/components/lens/lens_features.cc
+@@ -16,7 +16,8 @@
+ 
+ namespace lens::features {
+ 
+-BASE_FEATURE(kLensStandalone, base::FEATURE_ENABLED_BY_DEFAULT);
++// clean-chrome: standalone Lens (Google image search) off (S004).
++BASE_FEATURE(kLensStandalone, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ BASE_FEATURE(kShowContextualTasksMenuIcon, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+@@ -24,7 +25,9 @@ BASE_FEATURE(kLensOverlay,
+ #if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS)
+              base::FEATURE_DISABLED_BY_DEFAULT
+ #else
+-             base::FEATURE_ENABLED_BY_DEFAULT
++             // clean-chrome: Lens overlay (right-click image Google
++             // search) off (S004).
++             base::FEATURE_DISABLED_BY_DEFAULT
+ #endif
+ );
+ 
+diff --git a/components/network_time/network_time_tracker.cc b/components/network_time/network_time_tracker.cc
+index ada5634005..1e329fb527 100644
+--- a/components/network_time/network_time_tracker.cc
++++ b/components/network_time/network_time_tracker.cc
+@@ -132,7 +132,9 @@ constexpr char kPrefNetworkTime[] = "network";
+ // rough nature of the time service provided by this class.)
+ constexpr uint32_t kTimeServerMaxSkewSeconds = 10;
+ 
+-constexpr char kTimeServiceURL[] = "http://clients2.google.com/time/1/current";
++// clean-chrome: network time service unreachable (CUP companion
++// of the component updater; S004).
++constexpr char kTimeServiceURL[] = "http://time.invalid/time/1/current";
+ 
+ // This is an ECDSA prime256v1 named-curve key.
+ constexpr int kKeyVersion = 10;
 diff --git a/components/omnibox/browser/aim_eligibility_service_features.cc b/components/omnibox/browser/aim_eligibility_service_features.cc
-index 89d1205f90..88d7a1bcce 100644
+index 89d1205f90..53ac1c1dfa 100644
 --- a/components/omnibox/browser/aim_eligibility_service_features.cc
 +++ b/components/omnibox/browser/aim_eligibility_service_features.cc
 @@ -8,7 +8,8 @@
@@ -285,13 +412,142 @@ index 89d1205f90..88d7a1bcce 100644
  namespace omnibox {
  
 -BASE_FEATURE(kAimEnabled, base::FEATURE_ENABLED_BY_DEFAULT);
-+// unsafe-chrome: omnibox AI Mode off by default (local automation build).
++// clean-chrome: omnibox AI Mode off by default (local automation build).
 +BASE_FEATURE(kAimEnabled, base::FEATURE_DISABLED_BY_DEFAULT);
  
  BASE_FEATURE(kAimServerEligibilityEnabled, base::FEATURE_ENABLED_BY_DEFAULT);
  
+diff --git a/components/omnibox/common/omnibox_features.cc b/components/omnibox/common/omnibox_features.cc
+index cd448cb2cf..f6780c9724 100644
+--- a/components/omnibox/common/omnibox_features.cc
++++ b/components/omnibox/common/omnibox_features.cc
+@@ -104,7 +104,8 @@ BASE_FEATURE(kZeroSuggestPrefetchDebouncing, DISABLED);
+ BASE_FEATURE(kZeroSuggestPrefetchingForComposebox, DISABLED);
+ 
+ // Enables prefetching of the zero prefix suggestions for eligible users on SRP.
+-BASE_FEATURE(kZeroSuggestPrefetchingOnSRP, enable_if(!IS_ANDROID));
++// clean-chrome: zero-prefix suggest prefetching off (S004).
++BASE_FEATURE(kZeroSuggestPrefetchingOnSRP, DISABLED);
+ 
+ // Enables prefetching of the zero prefix suggestions for eligible users on the
+ // Web (i.e. non-NTP and non-SRP URLs).
+diff --git a/components/optimization_guide/core/hints/hints_manager.cc b/components/optimization_guide/core/hints/hints_manager.cc
+index 97f36a998a..1bd4180e9c 100644
+--- a/components/optimization_guide/core/hints/hints_manager.cc
++++ b/components/optimization_guide/core/hints/hints_manager.cc
+@@ -61,8 +61,10 @@
+ 
+ namespace optimization_guide {
+ 
++// clean-chrome: Optimization Guide hints endpoint unreachable --
++// the backend behind Chrome's built-in AI features (S004).
+ const char kOptimizationGuideServiceGetHintsDefaultURL[] =
+-    "https://optimizationguide-pa.googleapis.com/v1:GetHints";
++    "https://og.invalid/v1:GetHints";
+ 
+ const char kLoadedHintLocalHistogramString[] =
+     "OptimizationGuide.LoadedHint.Result";
+diff --git a/components/optimization_guide/core/optimization_guide_features.cc b/components/optimization_guide/core/optimization_guide_features.cc
+index 86f9b2221f..6e1eeec63e 100644
+--- a/components/optimization_guide/core/optimization_guide_features.cc
++++ b/components/optimization_guide/core/optimization_guide_features.cc
+@@ -247,8 +247,10 @@ GURL GetOptimizationGuideServiceGetModelsURL() {
+         switches::kOptimizationGuideServiceGetModelsURL));
+   }
+ 
++  // clean-chrome: Optimization Guide models endpoint unreachable
++  // (S004).
+   static const char kOptimizationGuideServiceGetModelsDefaultURL[] =
+-      "https://optimizationguide-pa.googleapis.com/v1:GetModels";
++      "https://og.invalid/v1:GetModels";
+   GURL get_models_url(kOptimizationGuideServiceGetModelsDefaultURL);
+   CHECK(get_models_url.SchemeIs(url::kHttpsScheme));
+   return get_models_url;
+diff --git a/components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc b/components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc
+index dc129840ec..3e8769f9f6 100644
+--- a/components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc
++++ b/components/safe_browsing/core/browser/db/sb_protocol_manager_util.cc
+@@ -37,7 +37,8 @@ namespace safe_browsing {
+ // Can be overriden by tests.
+ const char* g_sbv4_url_prefix_for_testing = nullptr;
+ 
+-const char kSbV4UrlPrefix[] = "https://safebrowsing.googleapis.com/v4";
++// clean-chrome: Safe Browsing v4 endpoint unreachable (S004).
++const char kSbV4UrlPrefix[] = "https://sb.invalid/v4";
+ 
+ const base::FilePath::CharType kStoreSuffix[] = FILE_PATH_LITERAL(".store");
+ 
+@@ -45,8 +46,10 @@ namespace {
+ 
+ // The default URL prefix where browser reports safe browsing hits and malware
+ // details.
++// clean-chrome: Safe Browsing hit/malware report endpoint unreachable
++// (S004).
+ const char kSbReportsURLPrefix[] =
+-    "https://safebrowsing.google.com/safebrowsing";
++    "https://sb.invalid/safebrowsing";
+ 
+ std::string Unescape(const std::string& url) {
+   std::string unescaped_str(url);
+diff --git a/components/safe_browsing/core/browser/db/v5_search_hashes_util.cc b/components/safe_browsing/core/browser/db/v5_search_hashes_util.cc
+index dfc5735ed0..1d27c33451 100644
+--- a/components/safe_browsing/core/browser/db/v5_search_hashes_util.cc
++++ b/components/safe_browsing/core/browser/db/v5_search_hashes_util.cc
+@@ -212,7 +212,7 @@ std::string GetResourceUrl(V5::SearchHashesRequest* request) {
+                         &request_base64);
+ 
+   std::string url = base::StringPrintf(
+-      "https://safebrowsing.googleapis.com/v5/hashes:search"
++      "https://sb.invalid/v5/hashes:search"
+       "?$req=%s&$ct=application/x-protobuf",
+       request_base64.c_str());
+   auto api_key = google_apis::GetAPIKey();
+diff --git a/components/safe_browsing/core/browser/db/v5_update_protocol_manager.cc b/components/safe_browsing/core/browser/db/v5_update_protocol_manager.cc
+index 986382dc50..63392bb679 100644
+--- a/components/safe_browsing/core/browser/db/v5_update_protocol_manager.cc
++++ b/components/safe_browsing/core/browser/db/v5_update_protocol_manager.cc
+@@ -164,7 +164,7 @@ void V5UpdateProtocolManager::IssueUpdateRequest(
+   std::string request_base64 =
+       GetBase64SerializedUpdateRequestProto(list_identifier_to_version_mapping);
+   std::string url = base::StringPrintf(
+-      "https://safebrowsing.googleapis.com/v5/hashLists:batchGet"
++      "https://sb.invalid/v5/hashLists:batchGet"
+       "?$req=%s&$ct=application/x-protobuf",
+       request_base64.c_str());
+   auto api_key = google_apis::GetAPIKey();
+diff --git a/components/safe_browsing/core/browser/realtime/url_lookup_service.cc b/components/safe_browsing/core/browser/realtime/url_lookup_service.cc
+index b1334b69ba..25d3fc6a49 100644
+--- a/components/safe_browsing/core/browser/realtime/url_lookup_service.cc
++++ b/components/safe_browsing/core/browser/realtime/url_lookup_service.cc
+@@ -163,8 +163,9 @@ GURL RealTimeUrlLookupService::GetRealTimeLookupUrl() const {
+     return *url_for_tests;
+   }
+ 
++  // clean-chrome: real-time URL check reporting unreachable (S004).
+   return GURL(
+-      "https://safebrowsing.google.com/safebrowsing/clientreport/realtime");
++      "https://sb.invalid/safebrowsing/clientreport/realtime");
+ }
+ 
+ net::NetworkTrafficAnnotationTag
+diff --git a/components/safe_browsing/core/common/safe_browsing_prefs.cc b/components/safe_browsing/core/common/safe_browsing_prefs.cc
+index 3921d014f2..b28a22ea97 100644
+--- a/components/safe_browsing/core/common/safe_browsing_prefs.cc
++++ b/components/safe_browsing/core/common/safe_browsing_prefs.cc
+@@ -275,8 +275,10 @@ void RegisterProfilePrefs(PrefRegistrySimple* registry) {
+       prefs::kSafeBrowsingEsbProtegoPingWithTokenLastLogTime, base::Time());
+   registry->RegisterTimePref(
+       prefs::kSafeBrowsingEsbProtegoPingWithoutTokenLastLogTime, base::Time());
++  // clean-chrome: Safe Browsing off by default -- no list downloads,
++  // no hit reports, no URL scanning (S004).
+   registry->RegisterBooleanPref(
+-      prefs::kSafeBrowsingEnabled, true,
++      prefs::kSafeBrowsingEnabled, false,
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+   if (base::FeatureList::IsEnabled(kEsbAsASyncedSetting)) {
+     registry->RegisterBooleanPref(
 diff --git a/components/search_engines/template_url_service.cc b/components/search_engines/template_url_service.cc
-index 5c461210b9..8b71386c03 100644
+index 5c461210b9..15801d8833 100644
 --- a/components/search_engines/template_url_service.cc
 +++ b/components/search_engines/template_url_service.cc
 @@ -646,7 +646,9 @@ void TemplateURLService::RegisterProfilePrefs(
@@ -299,9 +555,78 @@ index 5c461210b9..8b71386c03 100644
    registry->RegisterStringPref(prefs::kDefaultSearchProviderGUID,
                                 std::string());
 -  registry->RegisterBooleanPref(prefs::kDefaultSearchProviderEnabled, true);
-+  // unsafe-chrome: omnibox does not fall back to Google search by
++  // clean-chrome: omnibox does not fall back to Google search by
 +  // default (existing profiles keep their persisted value).
 +  registry->RegisterBooleanPref(prefs::kDefaultSearchProviderEnabled, false);
    registry->RegisterBooleanPref(
        prefs::kDefaultSearchProviderContextMenuAccessAllowed, true);
  }
+diff --git a/components/translate/core/browser/translate_script.cc b/components/translate/core/browser/translate_script.cc
+index db76c7938f..661f63eef4 100644
+--- a/components/translate/core/browser/translate_script.cc
++++ b/components/translate/core/browser/translate_script.cc
+@@ -52,8 +52,10 @@ DataRegion GetDataRegionFromPref(PrefService* prefs) {
+ 
+ }  // namespace
+ 
++// clean-chrome: integrated Google Translate script endpoint
++// unreachable (S004).
+ const char TranslateScript::kScriptURL[] =
+-    "https://translate.googleapis.com/translate_a/element.js";
++    "https://translate.invalid/translate_a/element.js";
+ 
+ const char TranslateScript::kRequestHeaderName[] =
+     "Google-Translate-Element-Mode";
+diff --git a/components/translate/core/common/translate_util.cc b/components/translate/core/common/translate_util.cc
+index 7763bae3c5..93fb30fd4d 100644
+--- a/components/translate/core/common/translate_util.cc
++++ b/components/translate/core/common/translate_util.cc
+@@ -28,7 +28,8 @@ constexpr int kMaxNumberOfAutoNever = 2;
+ 
+ namespace translate {
+ 
+-const char kSecurityOrigin[] = "https://translate.googleapis.com/";
++// clean-chrome: translate security origin unreachable (S004).
++const char kSecurityOrigin[] = "https://translate.invalid/";
+ 
+ GURL GetTranslateSecurityOrigin() {
+   std::string security_origin(kSecurityOrigin);
+diff --git a/google_apis/gaia/gaia_urls.cc b/google_apis/gaia/gaia_urls.cc
+index 0a79ca0bc9..c1ce941359 100644
+--- a/google_apis/gaia/gaia_urls.cc
++++ b/google_apis/gaia/gaia_urls.cc
+@@ -27,7 +27,10 @@ namespace {
+ 
+ // Gaia service constants
+ const char kDefaultGoogleUrl[] = "http://google.com";
+-const char kDefaultGaiaUrl[] = "https://accounts.google.com";
++// clean-chrome: Gaia endpoints point at the RFC 6761 reserved .invalid
++// TLD so every startup Gaia probe (ListAccounts etc.) fails fast with
++// zero network traffic (S004).
++const char kDefaultGaiaUrl[] = "https://gaia.invalid";
+ const char kDefaultGoogleApisBaseUrl[] = "https://www.googleapis.com";
+ const char kDefaultOAuth2MtlsBaseUrl[] = "https://oauth2.mtls.googleapis.com";
+ const char kDefaultOAuthAccountManagerBaseUrl[] =
+diff --git a/google_apis/gcm/engine/gservices_settings.cc b/google_apis/gcm/engine/gservices_settings.cc
+index 7a075a210c..c0c779799f 100644
+--- a/google_apis/gcm/engine/gservices_settings.cc
++++ b/google_apis/gcm/engine/gservices_settings.cc
+@@ -29,12 +29,15 @@ const char kRegistrationURLKey[] = "gcm_registration_url";
+ 
+ const int64_t kDefaultCheckinInterval = 2 * 24 * 60 * 60;  // seconds = 2 days.
+ const int64_t kMinimumCheckinInterval = 12 * 60 * 60;  // seconds = 12 hours.
+-const char kDefaultCheckinURL[] = "https://android.clients.google.com/checkin";
+-const char kDefaultMCSHostname[] = "mtalk.google.com";
++// clean-chrome: GCM checkin endpoint unreachable (S004).
++const char kDefaultCheckinURL[] = "https://gcm.invalid/checkin";
++// clean-chrome: GCM MCS (XMPP push) host unreachable (S004).
++const char kDefaultMCSHostname[] = "gcm-mcs.invalid";
+ const int kDefaultMCSMainSecurePort = 5228;
+ const int kDefaultMCSFallbackSecurePort = 443;
++// clean-chrome: GCM registration endpoint unreachable (S004).
+ const char kDefaultRegistrationURL[] =
+-    "https://android.clients.google.com/c2dm/register3";
++    "https://gcm.invalid/c2dm/register3";
+ // Settings that are to be deleted are marked with this prefix in checkin
+ // response.
+ const char kDeleteSettingPrefix[] = "delete_";
