@@ -18,7 +18,7 @@ git config --global core.longpaths true
 其余预检：
 
 - 控制面板「App execution aliases」取消 `python.exe` / `python3.exe` 指向 App Installer 的别名（防与 depot_tools 自带 python 冲突）
-- Defender 排除 `C:\unsafe-chrome`（否则链接阶段被扫描拖到极慢；实证 2026-09-11：未排除时 `git add` 40 万文件仅 21 文件/秒，排除后正常）[实证: M008 同日]
+- Defender 排除 `C:\clean-chrome`（否则链接阶段被扫描拖到极慢；实证 2026-09-11：未排除时 `git add` 40 万文件仅 21 文件/秒，排除后正常）[实证: M008 同日]
 - pip 全局配置 `C:\Users\<u>\AppData\Roaming\pip\pip.ini` 必须无 BOM：带 BOM 则 vpython venv 构建每轮必炸（M008）
 - 磁盘：源码 + 构建按 200GB 准备；2026-09-11 平移到 C: 内置 NVMe（724GB 空闲），E: 弃用 [实证: 当日 Get-Volume]
 - 布局价值主张：本目录的存在意义是**稳定增量编译 + 环境快速稳定重建**，一切布局决策（内置 NTFS、Defender 排除、双 out 目录、文档化的替代路线）都为这两条服务；换机/重装时按本手册应可在半天内从零恢复到可编译状态
@@ -43,9 +43,9 @@ vs2026_install = C:\Program Files\Microsoft Visual Studio\2026\<Edition>   # 仅
 depot_tools 与 fetch（首跑 `gclient` 必须在 cmd.exe，官方明确 PowerShell 会装坏 msysgit/python）：
 
 ```bat
-cd /d C:\unsafe-chrome
+cd /d C:\clean-chrome
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
-:: 把 C:\unsafe-chrome\depot_tools 加到 PATH 最前(系统或用户变量,须在任何 python/git 之前)
+:: 把 C:\clean-chrome\depot_tools 加到 PATH 最前(系统或用户变量,须在任何 python/git 之前)
 set DEPOT_TOOLS_WIN_TOOLCHAIN=0
 gclient
 fetch --nohooks --no-history chromium
@@ -84,7 +84,7 @@ uv run tools/net-probe.py --repo google/skia   # 探指定镜像仓的 codeload 
 
 ```powershell
 # 1 tarball 落地（aria2 多连接分段+断点续传，专治传输掐断）
-aria2c -x16 -s16 -c -m 20 --retry-wait=5 -d C:\unsafe-chrome\chromium -o chromium-152.tar.gz https://codeload.github.com/chromium/chromium/tar.gz/refs/tags/152.0.7977.84
+aria2c -x16 -s16 -c -m 20 --retry-wait=5 -d C:\clean-chrome\chromium -o chromium-152.tar.gz https://codeload.github.com/chromium/chromium/tar.gz/refs/tags/152.0.7977.84
 # 2 解压改名（bsdtar 会报约 7 个 symlink 失败，属预期，后续 git checkout 按Windows语义补齐）
 tar -xzf chromium-152.tar.gz; Move-Item chromium-152.0.7977.84 src
 # 3 建仓并归化到官方 tag 对象（fetch 走 SSH；被掐就重试，已传对象入库不浪费）
@@ -106,13 +106,13 @@ git checkout -f -b local-152 FETCH_HEAD
 
 ```powershell
 # 锚定式(默认用,幂等,uv 全平台,五文件六锚,before/after/replace 三模式)
-uv run C:\unsafe-chrome\patches\apply-auto-allow.py --src-root C:/unsafe-chrome/chromium/src
+uv run C:\clean-chrome\patches\apply-auto-allow.py --src-root C:/clean-chrome/chromium/src
 ```
 
 或钉 tag 标准补丁（在 `chromium\src` 下）：
 
 ```bat
-git apply C:\unsafe-chrome\patches\auto-allow-devtools-connections-152.0.7977.84.patch
+git apply C:\clean-chrome\patches\auto-allow-devtools-connections-152.0.7977.84.patch
 ```
 
 两者等价（S001/S002 验证记录）；锚点失配报错是保护，照 S001 第六节升 tag 流程处理。短路整段逻辑必须用 replace 模式,禁止提前 return（-Wunreachable-code-aggressive + -Werror,M011）。效果清单见 S002 第二节（默认端口 9222、零对话框、零 infobar、默认 User Data 零限制）。
@@ -146,7 +146,7 @@ autoninja -C out\Release chrome
 启动（2026-09-11 起**无需任何参数**,补丁已默认开 9222）：
 
 ```bat
-C:\unsafe-chrome\chromium\src\out\Release\chrome.exe
+C:\clean-chrome\chromium\src\out\Release\chrome.exe
 ```
 
 如需隔离实例或换端口,显式参数仍可叠加：`--user-data-dir=<dir>` / `--remote-debugging-port=<port>`。
@@ -155,7 +155,7 @@ C:\unsafe-chrome\chromium\src\out\Release\chrome.exe
 
 ```powershell
 # 1 开关编进产物(在 chrome.dll,不在 chrome.exe;--help 不列自定义开关,别用它验证)
-findstr /m /c:"auto-allow-devtools-connections" C:\unsafe-chrome\chromium\src\out\Release\chrome.dll
+findstr /m /c:"auto-allow-devtools-connections" C:\clean-chrome\chromium\src\out\Release\chrome.dll
 # 2 HTTP 端点通
 curl http://127.0.0.1:9222/json/version
 ```
@@ -204,7 +204,7 @@ macOS：最新 Xcode + CLT；`ls "$(xcode-select -p)/Platforms/MacOSX.platform/D
 
 | # | 坑 | 处置 |
 | --- | --- | --- |
-| 1 | 路径含空格 | 全程 `C:\unsafe-chrome` 无空格 |
+| 1 | 路径含空格 | 全程 `C:\clean-chrome` 无空格 |
 | 2 | Windows 首跑 gclient 用了 PowerShell | msysgit/python 装坏，删掉重来，必须 cmd.exe |
 | 3 | 没设 DEPOT_TOOLS_WIN_TOOLCHAIN=0 | 外部开发者直接失败 |
 | 4 | autocrlf 没设 false | 行尾污染，patch 应用异常 |

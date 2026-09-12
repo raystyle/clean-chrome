@@ -1,4 +1,4 @@
-# unsafe-chrome：自定义 Chromium 加 auto-allow 开关
+# clean-chrome：自定义 Chromium 加 auto-allow 开关
 
 > 自编译 Chromium，加命令行开关 `--auto-allow-devtools-connections`：每个远程调试连接不经确认对话框直接放行（`AcceptDebugging` 短路回 `kAllow`）。只用于本机自动化专用浏览器，绝不提交上游、不替换日常 Chrome。
 
@@ -9,7 +9,7 @@
 docs\references\R001-chromium-build-操作手册.md
 
 # 2 打补丁(锚定式,幂等,uv 全平台)
-uv run patches/apply-auto-allow.py --src-root C:/unsafe-chrome/chromium/src
+uv run patches/apply-auto-allow.py --src-root C:/clean-chrome/chromium/src
 
 # 3 运行:无需任何参数,双击即用
 #    默认开 9222 调试端口、默认 User Data 零限制、零确认对话框、零提示条

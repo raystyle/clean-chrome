@@ -1,4 +1,4 @@
-# args.gn for unsafe-chrome (verified against tag 152.0.7977.84)
+# args.gn for clean-chrome (verified against tag 152.0.7977.84)
 # GN args 是 per-out-dir 的：本文件是模板与说明，实际生效的是
 # out\Dev\args.gn 与 out\Release\args.gn（内容见下）。
 #

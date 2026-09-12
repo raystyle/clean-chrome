@@ -41,6 +41,8 @@
 | --- | --- | --- |
 | S001 | `docs\research\S001-devtools-auto-allow-switch-上游核实与补丁设计.md` | 开关不存在/策略不能绕/机制/补丁设计/验证记录 |
 | S002 | `docs\research\S002-CDP调试-提示限制与检测特征全景.md` | 提示/限制/检测特征逐项移除层与保留建议(五文件六锚定档) |
+| S003 | `docs\research\S003-浏览器静默化定制清单.md` | 启动静默与 Google 触点 UI 剔除(19 锚定档与验证全绿) |
+| S004 | `docs\research\S004-网络触点剔除-Google外联与遥测清零.md` | 网络层 Google 域外联与遥测清零(.invalid 端点+feature/pref,43 锚净测 0 外联) |
 
 ## 六、references 现役流程
 
@@ -60,6 +62,9 @@
 | --- | --- | --- | --- |
 | M001-M004 | `docs\mistakes\MISTAKES.md`（单文件） | PowerShell here-string、char Replace、git diff --no-index、autocrlf | M001 至 M004 |
 | M005-M008 | `docs\mistakes\MISTAKES.md`（单文件） | 外置盘掉线、停 fetch 残留清场、直连间歇阻断与低速超时、pip.ini BOM 与 GIT_CONFIG_COUNT | M005 至 M008 |
+| M009-M013 | `docs\mistakes\MISTAKES.md`（单文件） | 项目内工具链优先（GOROOT 污染）、singleton 误杀、-Wunreachable-code 替换式锚定、窗口成员不可空、幽灵锚 | M009 至 M013 |
+| M014-M015 | `docs\mistakes\MISTAKES.md`（单文件） | 跨平台 tar 分发丢执行位、平台 CIPD 与 npm 资产缺失须目标机 sync 重装 | M014 至 M015 |
+| M016-M017 | `docs\mistakes\MISTAKES.md`（单文件） | protobuf 同版本号树内带兼容补丁与 wheel 混搭、幂等 marker 误用上游字节致锚永久 skip | M016 至 M017 |
 
 ## 九、阶段与版本
 

@@ -2,7 +2,7 @@
 
 > 本机（Windows）编译带 `--auto-allow-devtools-connections` 的 Chromium 并验证生效。落点：本文件。进行中与否以 TODO.md 为准。
 
-- 状态：Dev 验收全绿（2026-09-11）；Release 分发产物待编（R001 五节顺序的后半）
+- 状态：完成（2026-09-12）：Dev 与 Release 双产物验收全绿（Release 无参数 9222 + about:blank 首页 + WS 13ms 零对话框 + findstr 开关入 dll）
 - 日期：2026-09-11
 - 关联：PRD D02；S001（研究与补丁）；R001（操作手册）；PLAN/TODO
 
@@ -34,6 +34,10 @@ agent 自动化附着本机浏览器时被 DevTools 确认对话框打断；上�
 - 首次编译 2 至 8 小时且可能因工具链版本踩坑：严格照 R001 版本号安装
 - 补丁锚点失配：apply 脚本显式报错保护，照 S001 第六节处理
 - 回滚：删 `chromium\src\out\Release` 重编即可；补丁本身 `git checkout` 三文件即撤
+
+## 验收记录（Release,2026-09-12）
+
+无参数启动 out\Release\chrome.exe:9222 自动开;/json/version 152;首 tab about:blank(19 锚全入产物);WS 握手 13ms 零对话框;findstr 开关命中 chrome.dll。
 
 ## 实施过程与经验
 

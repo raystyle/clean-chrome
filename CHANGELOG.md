@@ -7,3 +7,6 @@
 - 2026-09-11 项目启动：上游核实完成（S001），补丁双形态产出并回环验证，文档体系建立
 - 2026-09-11 **D02 Dev 构建验收全绿**：Windows 自编 Chromium 152.0.7977.84 带 `--auto-allow-devtools-connections`,验收四条全过（开关入产物 / CDP 端点 / 零对话框 / bh 附着）；网络受阻替代路线与 tools\net-probe.py 沉淀进 R001;M005 至 M009 入错误库。Release 分发产物待编
 - 2026-09-11 **浏览器静默化收官（D02-2/D02-3）**：补丁体系 uv Python 化并扩至 19 锚 12 文件：无参数启动默认开 9222、默认 User Data 零限制、启动零提示零横幅（API 密钥/过时系统/OSCrypt/默认浏览器/会话恢复/crash 气泡/首跑向导全灭）、NTP 全入口 about:blank、默认搜索与 AI Mode 关闭；S002/S003 研究定档,M011 至 M013 入库（幽灵锚教训：编译通过不等于锚生效）
+- 2026-09-12 **P0001 完成:Release 分发产物落地并部署**：Release 全编验收全绿（无参数 9222 + about:blank 首页 + WS 零对话框 + 开关入 dll）,`tools\deploy-release.py` 部署自包含目录至 C:\browse-rs\chromium-152.0.7977.84（含 SxS manifest 与 initial_preferences）
+- 2026-09-12 **网络触点清零（D02-4,S004）**：net-audit 实证驱动补丁扩至 **43 锚 32 文件**:Gaia/GCM/组件更新/CUP 时间/拼写词典端点 `.invalid` 化（RFC 6761 永不解析）、翻译与 Lens 与 zero-suggest prefetch feature 关、SB 全家（v4/v5/realtime/文件扫描）与翻译提议与 suggest pref 默认关;净测 30 秒空 profile **Google 域 0 外联**;M014 至 M017 入库（跨平台分发三连坑、protobuf 同号不同内容、marker 幽灵锚）
+- 2026-09-12 **项目更名 clean-chrome（D02-5）**：GitHub 仓库 rename、remote 更新、项目文件 86 处更替、补丁 marker 全量换 clean-chrome 并重打重验（patch 31KB）

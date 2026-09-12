@@ -19,8 +19,11 @@
 | D03 | 三平台（Windows/Linux/macOS）构建对齐同一 tag 与同一份补丁，不维护三份源码分叉 | 已采纳 | 第 1 轮（用户初始指南明确三台机器） | R001 三台纪律节 |
 
 > 追溯注记：D02/D03 于 2026-09-11 骨架建立时按当日会话与用户初始指南回溯登记 [推断: 按时间线重建]。
-> 用户裁定记录：2026-09-11 第 1 轮裁定仓库推送到 `github.com/raystyle/unsafe-chrome`；顶层 research 目录并入 docs 体系（产物落 `poc\`）。
+> 用户裁定记录：2026-09-11 第 1 轮裁定仓库推送到 `github.com/raystyle/clean-chrome`；顶层 research 目录并入 docs 体系（产物落 `poc\`）。
 
 | D02-2 | 无参数启动默认开 9222 调试端口 | 2026-09-11 | 进行中 | 用户裁定:自编浏览器双击即开端口;扩补丁边界至第四文件 remote_debugging_server.cc |
 
 | D02-3 | 浏览器静默化:NTP 剔除默认 about:blank、地址栏 Google 搜索屏蔽、同类干扰提示全关 | 2026-09-11 | 进行中 | 用户裁定连发:S003 收编 |
+
+| D02-4 | 网络触点清零:Google 域外联与遥测打点全部剔除(Gaia 探测/GCM/组件更新/CUP 时间/拼写词典/翻译与右键 Google 服务/AI 后台/Safe Browsing 全家/文件扫描/zero-suggest 预取) | 2026-09-12 | 已采纳 | 用户裁定连发(net-audit 实证驱动):S004 收编,补丁扩至 43 锚 32 文件 |
+| D02-5 | 项目与仓库更名 clean-chrome | 2026-09-12 | 进行中 | GitHub repo 已改;本地目录改名待用户重启后执行;补丁 marker 与文档自称已全量更替 |
