@@ -195,12 +195,40 @@ macOS：最新 Xcode + CLT；`ls "$(xcode-select -p)/Platforms/MacOSX.platform/D
 
 平台注意：16GB 内存机配至少 16GB swap；Windows 的 depot_tools 不与 WSL 共用。
 
-## 八、三台机器纪律
+## 八、跨平台树分发与部署（2026-09-12 双机实战定档）
+
+三台同 tag 同补丁（见九节纪律）。网络受限/流量大时**不分发不打包 out\**，只搬源码与 .git：
+
+1. **depot_tools**：从 git 仓导干净档（不带工作区缓存 bootstrap/.cipd_bin）：
+
+```powershell
+git -C C:\clean-chrome\depot_tools archive -o depot_tools-clean.tar HEAD
+```
+
+2. **构建树**：`uv run tools\pack-tree.py`（默认根 C:\clean-chrome，产 chromium-tree.tar；排除 out/.cipd_bin/.vpython-root 等平台产物；Windows bsdtar 对此树段错误，专用 walker 替代）
+
+3. **落地修法**（目标机解包后三连，坑见 M014/M015/M016）：
+
+```bash
+# a 执行位恢复：git 记录全量 + git 外资产兜底（只做其一必踩下一处）
+cd ~/chromium/src && git ls-files -s | awk '$1=="100755"{print $4}' | xargs chmod u+x
+chmod -R u+x third_party/node/*/bin 2>/dev/null   # CIPD/node 等 git 外资产
+# b 平台资产补装：gclient sync 只补本机 CIPD（gn/lld/node 平台包），git 仓已钉 tag 零拉取，几分钟
+cd ~/chromium && gclient sync --with_branch_heads --with_tags
+# c devtools-frontend 平台原生包（optional deps 按安装平台落盘）：fnm 的 npm 全限定补装
+npm i --no-save --no-package-lock --ignore-scripts @rollup/rollup-<plat>@<pin>
+```
+
+4. **protobuf 崩**（`api_implementation has no attribute Type`）：树内 `third_party/protobuf/python` 是打过兼容补丁的 runtime，全量覆盖 venv site-packages 与 out/Release/pyproto 两处（M016）
+
+5. **本机部署**：`uv run tools\deploy-release.py` 把 out\Release 产物部署为自包含版本子目录至 C:\browse-rs（SxS manifest 必带，防与日常 Chrome 的注册类名互踩）；双机产物验收走六节四条对应平台版
+
+## 九、三台机器纪律
 
 - 三台用同一 tag、同一份补丁；日常只在一台改，另两台 checkout 同 tag 后 `git apply` 同一 patch
 - 不维护三份源码分叉；升 tag 顺序：一台更新补丁双形态并在参照树验证，再分发
 
-## 九、常见坑速查
+## 十、常见坑速查
 
 | # | 坑 | 处置 |
 | --- | --- | --- |
@@ -219,3 +247,5 @@ macOS：最新 Xcode + CLT；`ls "$(xcode-select -p)/Platforms/MacOSX.platform/D
 | 13 | VS 组件图找不到 DebuggingTools 包 | 装 Debuggers 用 winsdksetup /features，见工具链节 |
 | 14 | tar 解压报 symlink Invalid argument | 预期行为（约 7 个），git checkout 按 core.symlinks=false 补齐 |
 | 15 | 系统装过 Go 且设了 GOROOT | dawn/tint 生成器 go 版本错配（M009），构建 shell 先 `GOROOT/GOPATH/GOCACHE` 置空；项目内工具链优先，勿让系统 go/python 环境变量外泄进构建 |
+| 16 | 根目录改名后续编秒错 fork/exec 旧绝对路径 | ninja 生成物内嵌生成时刻绝对路径，重跑 gn gen 同参数再续编（M018） |
+| 17 | agent 会话（PYTHONUTF8=1）续编重 gen 后的树 | 两个互斥编码坑：acls action 读 icacls 本地化名（GBK）按 utf-8 崩,剥变量后 json5 又读旧 gen 产物按 cp936 崩；修法：保留 PYTHONUTF8=1,单独无变量 shell 手跑 acls 预 stamp,续编显式 -j 16 防内存峰值（M019） |

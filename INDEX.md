@@ -13,9 +13,12 @@
 | 入口 | `README.md` | 项目概貌、结论表、快速开始指针 |
 | 根原语 | `PRD.md` `GOAL.md` `PLAN.md` `TODO.md` | 需求/目标/计划/进度 |
 | 协作规则 | `AGENTS.md`（`CLAUDE.md` 一行桥接） | 唯一权威源 |
-| 补丁 | `patches\apply-auto-allow.py` | 锚定式补丁脚本（uv 运行,五文件六锚,三模式,默认用,幂等;2026-09-11 起替代 ps1） |
-| 补丁 | `patches\auto-allow-devtools-connections-152.0.7977.84.patch` | 钉 tag 标准补丁（五文件） |
+| 补丁 | `patches\apply-auto-allow.py` | 锚定式补丁脚本（uv 运行,43 锚 32 文件,三模式,默认用,幂等;2026-09-11 起替代 ps1） |
+| 补丁 | `patches\auto-allow-devtools-connections-152.0.7977.84.patch` | 钉 tag 标准补丁（与脚本等价,43 锚） |
 | 工具 | `tools\net-probe.py` | 网络通道稳定性评估（uv 运行 PEP 723,全平台,见 R001 替代路线） |
+| 工具 | `tools\net-audit.py` | 产物网络行为审计（net-log 全进程 Google 域外联统计,S004 实证工具） |
+| 工具 | `tools\deploy-release.py` | Release 产物部署自包含目录至 C:\browse-rs（SxS manifest 必带） |
+| 工具 | `tools\pack-tree.py` | 构建树打包分发（双机同步用,配 R001 分发节） |
 | 构建 | `args.gn` | GN 参数唯一权威（enable_nacl 已删勿写） |
 | 验证产物 | `poc\S001-chromium152-auto-allow\` | 152 原始/补丁后参照树（orig/base/patched，只读） |
 | 文档 | `docs\`（proven/diary/research/references/guide/mistakes） | 六目录 |
@@ -34,6 +37,7 @@
 | 日期 | 文件 | 主题 |
 | --- | --- | --- |
 | 2026-09-11 | `docs\diary\2026-09-11-项目启动研究与立项.md` | 研究核实、补丁就绪、骨架立项 |
+| 2026-09-12 | `docs\diary\2026-09-12-双机部署与网络触点清零.md` | 双机分发攻坚、网络触点清零 43 锚、项目更名 clean-chrome |
 
 ## 五、研究文档
 
@@ -65,6 +69,7 @@
 | M009-M013 | `docs\mistakes\MISTAKES.md`（单文件） | 项目内工具链优先（GOROOT 污染）、singleton 误杀、-Wunreachable-code 替换式锚定、窗口成员不可空、幽灵锚 | M009 至 M013 |
 | M014-M015 | `docs\mistakes\MISTAKES.md`（单文件） | 跨平台 tar 分发丢执行位、平台 CIPD 与 npm 资产缺失须目标机 sync 重装 | M014 至 M015 |
 | M016-M017 | `docs\mistakes\MISTAKES.md`（单文件） | protobuf 同版本号树内带兼容补丁与 wheel 混搭、幂等 marker 误用上游字节致锚永久 skip | M016 至 M017 |
+| M018-M019 | `docs\mistakes\MISTAKES.md`（单文件） | 根目录改名后 ninja 生成物旧绝对路径须重 gn gen、PYTHONUTF8 混入构建 shell 致 icacls 本地化 ACL 解码崩 | M018 至 M019 |
 
 ## 九、阶段与版本
 
