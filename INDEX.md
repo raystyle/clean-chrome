@@ -70,6 +70,7 @@
 | M014-M015 | `docs\mistakes\MISTAKES.md`（单文件） | 跨平台 tar 分发丢执行位、平台 CIPD 与 npm 资产缺失须目标机 sync 重装 | M014 至 M015 |
 | M016-M017 | `docs\mistakes\MISTAKES.md`（单文件） | protobuf 同版本号树内带兼容补丁与 wheel 混搭、幂等 marker 误用上游字节致锚永久 skip | M016 至 M017 |
 | M018-M019 | `docs\mistakes\MISTAKES.md`（单文件） | 根目录改名后 ninja 生成物旧绝对路径须重 gn gen、PYTHONUTF8 混入构建 shell 致 icacls 本地化 ACL 解码崩 | M018 至 M019 |
+| M020 | `docs\mistakes\MISTAKES.md`（单文件） | 跨平台脚本用了 py3.10+ 的 write_text(newline=),mac CLT 3.9.6 崩于半打状态 | M020 |
 
 ## 九、阶段与版本
 

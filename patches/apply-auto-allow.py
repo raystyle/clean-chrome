@@ -574,6 +574,12 @@ MARK_ZPS_PREFETCH = "clean-chrome: zero-prefix suggest prefetching off"
 
 # --- engine -------------------------------------------------------------------
 
+def _write_text(path: Path, text: str) -> None:
+    # Path.write_text gained newline= only in py3.10; mac CLT python is 3.9.6 (M020)
+    with path.open("w", encoding="utf-8", newline="") as f:
+        f.write(text)
+
+
 def edit_file(path: Path, anchor: str, new: str, marker: str, label: str,
               *, mode: str = "before") -> None:
     """mode: 'before' | 'after' (insert around anchor) | 'replace'."""
@@ -589,11 +595,10 @@ def edit_file(path: Path, anchor: str, new: str, marker: str, label: str,
     if text.find(anchor, idx + 1) >= 0:
         raise SystemExit(f"anchor not unique in {label}")
     if mode == "replace":
-        path.write_text(text[:idx] + new + text[idx + len(anchor):],
-                        encoding="utf-8", newline="")
+        _write_text(path, text[:idx] + new + text[idx + len(anchor):])
     else:
         at = idx + len(anchor) if mode == "after" else idx
-        path.write_text(text[:at] + new + text[at:], encoding="utf-8", newline="")
+        _write_text(path, text[:at] + new + text[at:])
     print(f"[ok]   {label} patched")
 
 
