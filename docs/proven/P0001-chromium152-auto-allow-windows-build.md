@@ -53,3 +53,11 @@ agent 自动化附着本机浏览器时被 DevTools 确认对话框打断；上�
 ## 验收标准
 
 PLAN「完成的定义」四条全勾；达成后在 diary 补一笔。
+
+## 附录：三平台收官（2026-09-13,D03 同步达成）
+
+- **原子化同步**：三台同 tag（152.0.7977.84）同补丁（43 锚 clean-chrome）,打补丁后三台 `git status` 32 个改动文件清单**逐字节一致**;mac `[ok]×43` / linux `[skip]×43` 幂等等价核验
+- **全清从起点重编**：三台 out 全删、各自全新 gn gen、同时起编（Win -j16 / linux -j8 / mac -j6 caffeinate）;Build Succeeded 全零 FAILED（mac 3h42m / Win 约 4h / linux 6h30m）
+- **逐台验收全绿**：开关入二进制（Win chrome.dll / mac Chromium Framework / linux chrome,各 grep=1）、无参数默认 9222、WS 握手即时 101 零对话框、首页 about:blank;Windows 另过 net-audit（真实 Google 域 0 外联,触点全 `.invalid`）、deploy-release 刷新 C:\browse-rs、bh 附着端到端
+- **跨平台注意**：mac 开关串在 Chromium Framework 二进制（MacOS/Chromium 只是启动器）;Ubuntu 23.10+ 需 --no-sandbox 或开 userns（R001 坑 18）;无显示器验收用 --headless=new（坑 19）;远端杀进程 pkill -x（坑 20/M022）
+- 过程新坑 M020-M022 全部当日入库,历史坑 M001-M019 经预检矩阵无一重犯

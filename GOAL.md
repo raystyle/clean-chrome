@@ -20,13 +20,13 @@
 
 ## 进程
 
-- 当前目标：D02 Windows 构建：**Dev 验收全绿（2026-09-11 晚）；Release 分发落地并部署（2026-09-12）**；余项 43 锚 clean-chrome 版增量编译（改名双坑 M018/M019 修复后续编中）+ net-audit 复测 + 部署刷新
-- 演进：19 锚（CDP 摩擦+启动静默）扩至 43 锚 32 文件（D02-4 网络触点清零,S004 净测 Google 域 0 外联）；补丁双形态等价,marker 全量换 clean-chrome（D02-5 更名,GitHub 已 rename,本地目录 2026-09-12 夜改名落地）
-- 双机（D03）：lan-linux/lan-mac 树分发落地（pack-tree.py + R001 八节修法,M014-M016 跨平台三坑当日全修）,2026-09-12 夜双机 19 锚版 CXX 编译活跃（linux 2975/47442;mac helper 链接段）,完成后同步 43 锚
-- 网络受阻全程破局：googlesource/git-https/SSH 大流量均被间歇掐断（M007），改道 aria2x16 codeload tarball（1.4GB,103Mbps）+ GitHub SSH 归化官方 tag 对象 + gclient 循环与陪跑自愈拉齐 300+ 依赖仓（20.5GB）+ insteadOf 镜像注入（skia/devtools-frontend/quiche）
-- 环境坑当日全修：pip.ini BOM（M008）、GOROOT 污染（M009）、-j32 OOM 降 j16、改名双坑（M018 ninja 生成物旧绝对路径重 gn gen、M019 PYTHONUTF8 混入致 icacls 解码崩）
-- 验收四条全绿：findstr 开关入 chrome.dll；CDP HTTP 端点 152；WS 握手 10ms 零对话框（auto-allow 短路生效直接证据）；bh 附着（BH_CDP_URL）js() 页面执行通
-- 工具链：tools\net-probe.py（网络评估）/ net-audit.py（外联审计,S004 实证）/ deploy-release.py（SxS manifest 部署）/ pack-tree.py（跨机分发）
+- 当前目标：D02/D03 **三平台完美产物全部达成（2026-09-13）**：43 锚 clean-chrome 原子化同步（三台 32 文件清单逐字节一致）后各自全新全编,逐台验收全绿；余项仅本机 out\Dev 迭代目录全编收口
+- 本机 Windows：四条 + net-audit（真实 Google 域 0 外联,触点全 .invalid）+ deploy 刷新 C:\browse-rs（499 文件 652MB SxS manifest）+ bh 附着端到端（goto_url+js）
+- lan-mac：全编 3h42m,四条全绿（开关在 Chromium Framework 二进制,MacOS/Chromium 只是启动器）
+- lan-linux：全编 6h30m,headless 验收四条全绿（Ubuntu userns 限制用 --no-sandbox 过验,R001 坑表 18-20 沉淀：sandbox/headless 验收法/pkill 自匹配）
+- 网络受阻全程破局：googlesource/git-https/SSH 大流量均被间歇掐断（M007），改道 aria2x16 codeload tarball + GitHub SSH 归化官方 tag 对象 + gclient 循环与陪跑自愈拉齐 300+ 依赖仓 + insteadOf 镜像注入（skia/devtools-frontend/quiche）
+- 环境坑当日全修：pip.ini BOM（M008）、GOROOT 污染（M009）、-j32 OOM 降 j16、改名双坑（M018/M019）、Dev 低内存（M021）、pkill 自匹配（M022）
+- 工具链：tools\net-probe.py / net-audit.py（S004 实证）/ deploy-release.py（SxS manifest 部署）/ pack-tree.py（跨机分发）
 
 ## 历史
 
@@ -34,3 +34,4 @@
 | --- | --- | --- |
 | 2026-09-11 | D02 Windows 构建（Dev 验收） | 全绿：自编 chrome.exe/dll 带开关零弹窗,bh 端到端附着通;Release 分发产物待编 |
 | 2026-09-12 | D02 深化（Release 部署 + 43 锚网络清零 + 更名 clean-chrome） | Release 部署 C:\browse-rs 全绿;43 锚 32 文件净测 Google 域 0 外联（S004）;GitHub/本地全量更名;改名双坑 M018/M019 当日修复 |
+| 2026-09-13 | D02/D03 收官（三平台原子化重编 + 逐台验收） | **三平台完美产物**：预检矩阵过全部历史坑,三台全清从起点重编（Win 3h/mac 3h42m/linux 6h30m）,逐台四条全绿;本机另过 net-audit 0 外联/部署刷新/bh 冒烟;M020-M022 入库 |

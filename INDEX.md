@@ -38,6 +38,7 @@
 | --- | --- | --- |
 | 2026-09-11 | `docs\diary\2026-09-11-项目启动研究与立项.md` | 研究核实、补丁就绪、骨架立项 |
 | 2026-09-12 | `docs\diary\2026-09-12-双机部署与网络触点清零.md` | 双机分发攻坚、网络触点清零 43 锚、项目更名 clean-chrome |
+| 2026-09-13 | `docs\diary\2026-09-13-三平台收官验收.md` | 三平台原子化重编收官、逐台验收全绿 |
 
 ## 五、研究文档
 
@@ -71,6 +72,8 @@
 | M016-M017 | `docs\mistakes\MISTAKES.md`（单文件） | protobuf 同版本号树内带兼容补丁与 wheel 混搭、幂等 marker 误用上游字节致锚永久 skip | M016 至 M017 |
 | M018-M019 | `docs\mistakes\MISTAKES.md`（单文件） | 根目录改名后 ninja 生成物旧绝对路径须重 gn gen、PYTHONUTF8 混入构建 shell 致 icacls 本地化 ACL 解码崩 | M018 至 M019 |
 | M020 | `docs\mistakes\MISTAKES.md`（单文件） | 跨平台脚本用了 py3.10+ 的 write_text(newline=),mac CLT 3.9.6 崩于半打状态 | M020 |
+| M021 | `docs\mistakes\MISTAKES.md`（单文件） | Dev(symbol_level=1) 全编内存高于 Release,叠加常驻浏览器触发低水位杀任务,降 j 并收浏览器 | M021 |
+| M022 | `docs\mistakes\MISTAKES.md`（单文件） | ssh compound 里 pkill -f 同串文本自杀外壳（exit 255）,远端杀进程用 pkill -x | M022 |
 
 ## 九、阶段与版本
 

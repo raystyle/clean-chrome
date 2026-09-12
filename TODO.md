@@ -1,20 +1,15 @@
 # TODO：当前目标任务进度清单
 
 > 角色：当前目标的任务进度清单。目标完成后回填 docs/proven 对应方案，起新清单。
-> 2026-09-12 深夜快照：项目已更名 clean-chrome（GitHub 已改 raystyle/clean-chrome；本地目录改名由用户重启后执行 `Rename-Item C:\unsafe-chrome clean-chrome`，项目文件与脚本默认路径均已写为 C:\clean-chrome）。
+> 2026-09-13 收官快照：D02/D03 三平台完美产物达成（43 锚 clean-chrome 原子化同步重编,逐台验收全绿）。
 
 ## 任务进度清单
 
 | 任务项 | 进行中 | 说明 | 日期 |
 | --- | --- | --- | --- |
-| **三平台原子化全编（用户裁定：全停全清从起点，直到完美产物）** | 编译中 | 三台同步 43 锚 clean-chrome 版后同时全新起编：本机 -j16（out 已清+重 gen）、lan-linux -j8（~74k 步缓存回放中）、lan-mac -j6（caffeinate）；M016 protobuf 修复 venv 已失（重建按需）,若复发按 M016 树内 runtime 覆盖两处 | 2026-09-12 |
-| 三平台验收链 | 待编译 | 各台四条验收（开关入二进制/无参 9222/零对话框/about:blank）+ 本机 net-audit 0 外联 + bh 附着冒烟 + deploy-release 刷新 C:\browse-rs | 2026-09-12 |
-| 43 锚产物 net-audit 复测 | 待编译 | `uv run tools/net-audit.py`（默认指 out\Release）；19/26/34 锚版实测 Google 触点分别为 19/5/3 域，43 锚版目标 0（此前 43 锚 unsafe-chrome 版已实测 0） | 2026-09-12 |
-| 本机 Dev 目录重建 | 待办（Release 后串行） | out\Dev 已删（M018 同族作废）；Release 编完后 gn gen out\Dev（component+symbol_level=1）+ 全编 | 2026-09-12 |
-| 项目文件 clean-chrome 更名 | 已完成 | 11 文件 86 处替换；GitHub repo 已 rename；remote URL 已更新 | 2026-09-12 |
-| 本地目录改名 C:\clean-chrome | 已完成 | 用户重启 session 后执行（2026-09-12 夜）；连带 M018/M019 当场修复入库 | 2026-09-12 |
-| 提交推送（更名 + S004 + 43 锚 + M014-M017） | 已完成 | 359781b/6038d88 已推；文档批次 609e11e 已推 | 2026-09-12 |
-| CHANGELOG / diary / GOAL / README 回填 | 已完成 | 本 session 补齐 GOAL 进程/历史与 INDEX | 2026-09-12 |
-| R001 补充分发节 | 已完成 | 新八节 + 坑表 16/17 | 2026-09-12 |
-| 双机 43 锚同步 | 已完成 | 预检矩阵过 M001-M019 后：清 index.lock（M006）,checkout 回滚 19 锚（13 M+137/154 D 占位还原）,分发脚本,mac 43 ok / linux 43 skip（幂等等价）,三台 32 M 文件清单逐字节一致（原子态核验） | 2026-09-12 |
-| M020 补丁脚本 py3.9 兼容 | 已完成 | write_text(newline=) 换 open() 显式句柄；mac CLT 3.9.6 实证通过 | 2026-09-12 |
+| **三平台原子化全编 + 逐台验收（D02/D03 收官）** | 已完成 | 三台同步 43 锚（32 文件清单逐字节一致）后全清从起点重编：Win -j16 / mac -j6 caffeinate 3h42m / linux -j8 6h30m,全部 Build Succeeded 零 FAILED;**逐台验收全绿**：开关入二进制（Win chrome.dll / mac Chromium Framework / linux chrome,各 grep=1）+ 无参 9222 + WS 即时 101 零对话框 + about:blank;linux 以 headless 过验,GUI 验收法与 sandbox 处置沉淀 R001 坑表 18-20 | 2026-09-13 |
+| 本机扩展验收 | 已完成 | net-audit 真实 Google 域 0 外联（触点全 .invalid）;deploy 刷新 C:\browse-rs（499 文件 652MB,SxS manifest）;bh 附着端到端（goto_url+js 取回页面状态,专属 tab 已关） | 2026-09-13 |
+| 双机 43 锚同步 | 已完成 | 预检矩阵过全部历史坑：清 index.lock（M006）,checkout 回滚 19 锚（13 M + 137/154 D 占位还原）,脚本修 py3.9 兼容（M020）重分发,mac 43 ok / linux 43 skip 幂等等价 | 2026-09-12 |
+| 本机 out\Dev 全编 | 编译中 | -j8 后台（M021 低内存两杀后降并发）;component + symbol_level=1,改补丁分钟级迭代用;编完 findstr 验收开关即可（行为验收同源同补丁已在 Release 过） | 2026-09-13 |
+| D03 文档收口批次 | 已完成 | GOAL 历史/进程、CHANGELOG 封版、diary、M020-M022 入库、R001 坑表 18-20、INDEX、TODO 重写 | 2026-09-13 |
+| 历史完成项 | - | 更名收口（11 文件 86 处/GitHub rename/目录改名落地）、S004 网络触点清零、R001 分发节、M014-M019 入库等,详见 GOAL 历史与 CHANGELOG | 2026-09-12 |
