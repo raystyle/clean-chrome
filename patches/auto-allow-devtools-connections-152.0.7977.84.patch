@@ -40,10 +40,26 @@ index c9f49cd198..51778181cd 100644
  
  void ChromeDevToolsManagerDelegate::OnAccept() {
 diff --git a/chrome/browser/devtools/remote_debugging_server.cc b/chrome/browser/devtools/remote_debugging_server.cc
-index ea5ffb9a23..0bb6702927 100644
+index ea5ffb9a23..b9898eeff8 100644
 --- a/chrome/browser/devtools/remote_debugging_server.cc
 +++ b/chrome/browser/devtools/remote_debugging_server.cc
-@@ -167,18 +167,10 @@ IsRemoteDebuggingAllowed(const std::optional<bool>& is_default_user_data_dir,
+@@ -10,6 +10,7 @@
+ #include <utility>
+ 
+ #include "base/command_line.h"
++#include "base/environment.h"
+ #include "base/files/file_util.h"
+ #include "base/functional/bind.h"
+ #include "base/memory/ptr_util.h"
+@@ -17,6 +18,7 @@
+ #include "base/path_service.h"
+ #include "base/strings/string_number_conversions.h"
+ #include "base/strings/string_split.h"
++#include "base/strings/string_util.h"
+ #include "base/task/thread_pool.h"
+ #include "base/types/expected.h"
+ #include "build/branding_buildflags.h"
+@@ -167,18 +169,10 @@ IsRemoteDebuggingAllowed(const std::optional<bool>& is_default_user_data_dir,
          RemoteDebuggingServer::NotStartedReason::kDisabledByPolicy);
    }
  #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
@@ -66,14 +82,42 @@ index ea5ffb9a23..0bb6702927 100644
  #endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
    return true;
  }
-@@ -363,6 +355,12 @@ RemoteDebuggingServer::GetInstance(PrefService* local_state) {
+@@ -351,7 +345,25 @@ RemoteDebuggingServer::GetInstance(PrefService* local_state) {
+ 
+   auto server = base::WrapUnique(new RemoteDebuggingServer());
+ 
+-  if (command_line.HasSwitch(switches::kRemoteDebuggingPipe)) {
++  // clean-chrome: channel selection via environment (local automation
++  // build only). CLEAN_CHROME_DEBUG = port (default) | pipe | both;
++  // explicit command-line switches always win over the variable.
++  std::string clean_chrome_channel = "port";
++  if (std::unique_ptr<base::Environment> environment =
++           base::Environment::Create()) {
++    if (std::optional<std::string> clean_chrome_value =
++            environment->GetVar("CLEAN_CHROME_DEBUG")) {
++      std::string channel = base::ToLowerASCII(*clean_chrome_value);
++      if (channel == "pipe" || channel == "both" || channel == "port") {
++        clean_chrome_channel = channel;
++      }
++    }
++  }
++  const bool clean_chrome_pipe = clean_chrome_channel != "port";
++  const bool clean_chrome_port = clean_chrome_channel != "pipe";
++
++  if (command_line.HasSwitch(switches::kRemoteDebuggingPipe) ||
++      clean_chrome_pipe) {
+     if (const auto maybe_allow_debugging =
+             IsRemoteDebuggingAllowed(is_default_user_data_dir, local_state);
+         !maybe_allow_debugging.has_value()) {
+@@ -363,6 +375,13 @@ RemoteDebuggingServer::GetInstance(PrefService* local_state) {
  
    std::string port_str =
        command_line.GetSwitchValueASCII(::switches::kRemoteDebuggingPort);
 +
 +  // clean-chrome: open the debugging port on 9222 by default when launched
-+  // without --remote-debugging-port (local automation build only).
-+  if (port_str.empty()) {
++  // without --remote-debugging-port, unless the CLEAN_CHROME_DEBUG channel
++  // selection requests pipe-only (local automation build only).
++  if (port_str.empty() && clean_chrome_port) {
 +    port_str = "9222";
 +  }
    if (auto port = ParsePort(port_str)) {

@@ -4,27 +4,23 @@
 
 ## 当前目标
 
-D02 Windows 侧：本机编出带开关的 `chrome.exe` 并验证生效（方案全文见 `docs\proven\P0001`）
+D02-6 调试通道环境变量化：`CLEAN_CHROME_DEBUG=port|pipe|both`（默认 port 即现行为 9222;pipe 只管道不开端口;both 都开），管道句柄由启动方经 `--remote-debugging-io-pipes` 传入（机制见 `docs\research\S005`）
 
 ## 步骤
 
 | # | 步骤 | 依据 |
 | --- | --- | --- |
-| 0 | 预检：git 全局配置（autocrlf false 等）、App execution aliases、Defender 排除 | R001 预检节 |
-| 1 | 装 VS 2026 (>=18.0.0) + Desktop C++ + MFC/ATL；Win11 SDK 10.0.28000.2270；Debugging Tools 10.0.26100.3323+；设 `DEPOT_TOOLS_WIN_TOOLCHAIN=0` | R001 3.1 节 |
-| 2 | clone depot_tools 到 PATH 最前；cmd.exe 首跑 `gclient` | R001 3.2 节 |
-| 3 | `fetch --nohooks --no-history chromium`；checkout tag `152.0.7977.84`；`gclient sync --with_branch_heads --with_tags` | R001 3.2 节 |
-| 4 | 打补丁：`patches\apply-auto-allow.ps1`（或钉 tag 的 .patch，二者等价） | S001 补丁设计节 |
-| 5 | `gn gen out\Release`（参数照根 `args.gn`，注意 `enable_nacl` 已删不能写） | R001 3.3 节 |
-| 6 | `autoninja -C out\Release chrome`（首次 2 至 8 小时） | R001 3.3 节 |
-| 7 | 验收四条（见下） | R001 验证节 |
-| 8 | Linux/macOS 复制（同 tag 同 patch），进 P0001 附录后另立目标 | R001 三台纪律节 |
+| 1 | S005 机制研究定稿（pipe handler/AdoptPipes/断线关闸/协议模式） | 本轮源码实读 |
+| 2 | 改锚：remote_debugging_server.cc 通道选择块（env 读值 + pipe 启停 + 端口默认联动）,写入 apply-auto-allow.py（边界内文件,锚数 43 至 44） | S005 设计节;M017 marker 纪律 |
+| 3 | 参照树等价验证：脚本形态与 .patch 形态产物字节一致 | AGENTS 编码节;S001 流程 |
+| 4 | 增量重编 Release + Dev（单文件改动,分钟级/链一次 dll） | R001 五节 |
+| 5 | 验收矩阵：unset 至 9222;pipe 至 管道通且 9222 不听;both 至 双通（Python 启动器传 io-pipes 实测） | S005 验证节 |
+| 6 | 文档同步：README/R001/CHANGELOG/INDEX/diary/TODO;提交推送 | AGENTS 文档节 |
 
 ## 完成的定义
 
-- [ ] `out\Release\chrome.exe` 编译产出
-- [ ] `findstr /m /c:"auto-allow-devtools-connections" out\Release\chrome.dll` 命中
-- [ ] 带开关启动后 `curl http://127.0.0.1:9222/json/version` 返回 200 且全程无确认对话框
-- [ ] bh 附着该实例不弹 `DevToolsConnectionDialog` 即连即通
-
-达成后：P0001 回填实施过程、GOAL 移历史、CHANGELOG 记里程碑。
+- [ ] 未设变量：无参数启动 9222 照旧,行为与 43 锚版一致
+- [ ] `CLEAN_CHROME_DEBUG=pipe`：管道 CDP 双向通（Target.getBrowserVersion 往返）,9222 无监听
+- [ ] `CLEAN_CHROME_DEBUG=both`：9222 与管道同时可用
+- [ ] 两补丁形态等价（字节比对）;脚本幂等（重跑全 skip）
+- [ ] README/R001 同步,CHANGELOG 记条

@@ -151,6 +151,17 @@ C:\clean-chrome\chromium\src\out\Release\chrome.exe
 
 如需隔离实例或换端口,显式参数仍可叠加：`--user-data-dir=<dir>` / `--remote-debugging-port=<port>`。
 
+调试通道三态（2026-09-14 起,环境变量 `CLEAN_CHROME_DEBUG`,显式命令行开关永远优先,S005）：
+
+```powershell
+# 未设 = port（默认,无参数双击即 9222,现行为）
+$env:CLEAN_CHROME_DEBUG = 'pipe'   # 只 CDP 管道不开端口（启动器须传 --remote-debugging-io-pipes=<读句柄>,<写句柄>）
+$env:CLEAN_CHROME_DEBUG = 'both'   # 9222 与管道双通道
+# 管道验收/启动器范本：uv run tools\pipe-smoke.py --mode pipe|both
+```
+
+注意：pipe 态无有效句柄时浏览器启动即自退（闪退,非挂死）;管道断开浏览器随之关闭（启动器拥有生命周期）。
+
 验收四条（对应 PLAN 完成的定义）：
 
 ```powershell

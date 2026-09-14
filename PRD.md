@@ -27,3 +27,5 @@
 
 | D02-4 | 网络触点清零:Google 域外联与遥测打点全部剔除(Gaia 探测/GCM/组件更新/CUP 时间/拼写词典/翻译与右键 Google 服务/AI 后台/Safe Browsing 全家/文件扫描/zero-suggest 预取) | 2026-09-12 | 已交付（net-audit 真实 Google 域 0 外联,触点全 .invalid） | 用户裁定连发(net-audit 实证驱动):S004 收编,补丁扩至 43 锚 32 文件 |
 | D02-5 | 项目与仓库更名 clean-chrome | 2026-09-12 | 已交付（GitHub/本地目录/补丁 marker 全量落地） | GitHub repo 已改;本地目录 2026-09-12 夜改名;补丁 marker 与文档自称已全量更替 |
+
+| D02-6 | 调试管道（--remote-debugging-pipe）开启研究 | 2026-09-14 | 已交付（`CLEAN_CHROME_DEBUG=port|pipe|both` 47 锚落地,三态矩阵全绿,S005 六态全勾） | 第 1 轮澄清:用户裁定,启动时**自动初始**通道形态,由环境变量控制 port/pipe/both,默认 port=9222 现行为;pipe=只管道不开端口;both=都开。管道句柄由启动方传入;S005 收编 |

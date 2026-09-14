@@ -4,27 +4,30 @@
 # ///
 """apply-auto-allow.py -- clean-chrome anchored patcher (uv, cross-platform).
 
-Patches four files of a Chromium checkout (anchors are exact upstream bytes
-at tag 152.0.7977.84, chosen to hold across nearby tags):
+Patches 32 files of a Chromium checkout with 47 anchors (exact upstream bytes
+at tag 152.0.7977.84, chosen to hold across nearby tags). Families: CDP
+friction, startup silence, Google touchpoint removal, network endpoint
+zeroing (see docs/research S002/S003/S004 for the full ledger).
 
-  chrome/common/chrome_switches.h
-  chrome/common/chrome_switches.cc
-  chrome/browser/devtools/chrome_devtools_manager_delegate.cc
-  chrome/browser/devtools/remote_debugging_server.cc   (two anchors)
-
-Effect (local automation build only, never send upstream):
+Effect highlights (local automation build only, never send upstream):
   1. adds switch --auto-allow-devtools-connections;
   2. with that switch, every incoming remote debugging connection is
      accepted without the consent dialog;
   3. launching without --remote-debugging-port opens the port on 9222 by
      default;
   4. the default user data dir carries no remote-debugging restriction;
-  5. the "remote debugging active" infobar is never shown.
+  5. the "remote debugging active" infobar is never shown;
+  6. CLEAN_CHROME_DEBUG=port|pipe|both (default port) selects the debug
+     channel; pipe starts the fd/io-pipe handler without the TCP port,
+     both enables the two side by side; explicit command-line switches
+     always win over the variable (S005).
 
 Usage:
   uv run patches/apply-auto-allow.py [--src-root C:/clean-chrome/chromium/src]
 
 Idempotent: each anchor carries its own marker; patched anchors skip.
+Upgrading an already-patched tree across anchor generations: check out the
+files whose anchors changed, re-run (everything else skips).
 Replaces the retired apply-auto-allow.ps1 (same effect, verified equivalent).
 """
 from __future__ import annotations
@@ -71,12 +74,56 @@ ANCHOR_PORT = (
 NEW_PORT = (
     "\n\n"
     "  // clean-chrome: open the debugging port on 9222 by default when launched\n"
-    "  // without --remote-debugging-port (local automation build only).\n"
-    "  if (port_str.empty()) {\n"
+    "  // without --remote-debugging-port, unless the CLEAN_CHROME_DEBUG channel\n"
+    "  // selection requests pipe-only (local automation build only).\n"
+    "  if (port_str.empty() && clean_chrome_port) {\n"
     "    port_str = \"9222\";\n"
     "  }"
 )
 MARK_PORT = "  // clean-chrome: open the debugging port on 9222 by default"
+
+# --- CLEAN_CHROME_DEBUG channel selection (S005) ------------------------------
+
+ANCHOR_INCLUDE_ENV = '#include "base/command_line.h"'
+NEW_INCLUDE_ENV = '\n#include "base/environment.h"'
+MARK_INCLUDE_ENV = '#include "base/environment.h"'
+
+ANCHOR_INCLUDE_STR = '#include "base/strings/string_split.h"'
+NEW_INCLUDE_STR = '\n#include "base/strings/string_util.h"'
+MARK_INCLUDE_STR = '#include "base/strings/string_util.h"'
+
+ANCHOR_SERVER_WRAP = (
+    "  auto server = base::WrapUnique(new RemoteDebuggingServer());"
+)
+NEW_CHANNEL_ENV = (
+    "\n\n"
+    "  // clean-chrome: channel selection via environment (local automation\n"
+    "  // build only). CLEAN_CHROME_DEBUG = port (default) | pipe | both;\n"
+    "  // explicit command-line switches always win over the variable.\n"
+    "  std::string clean_chrome_channel = \"port\";\n"
+    "  if (std::unique_ptr<base::Environment> environment =\n"
+    "           base::Environment::Create()) {\n"
+    "    if (std::optional<std::string> clean_chrome_value =\n"
+    "            environment->GetVar(\"CLEAN_CHROME_DEBUG\")) {\n"
+    "      std::string channel = base::ToLowerASCII(*clean_chrome_value);\n"
+    "      if (channel == \"pipe\" || channel == \"both\" || channel == \"port\") {\n"
+    "        clean_chrome_channel = channel;\n"
+    "      }\n"
+    "    }\n"
+    "  }\n"
+    "  const bool clean_chrome_pipe = clean_chrome_channel != \"port\";\n"
+    "  const bool clean_chrome_port = clean_chrome_channel != \"pipe\";"
+)
+MARK_CHANNEL_ENV = "  // clean-chrome: channel selection via environment"
+
+ANCHOR_PIPE_IF = (
+    "  if (command_line.HasSwitch(switches::kRemoteDebuggingPipe)) {"
+)
+NEW_PIPE_IF = (
+    "  if (command_line.HasSwitch(switches::kRemoteDebuggingPipe) ||\n"
+    "      clean_chrome_pipe) {"
+)
+MARK_PIPE_IF = "      clean_chrome_pipe) {"
 
 ANCHOR_USER_DATA = (
     "#if BUILDFLAG(GOOGLE_CHROME_BRANDING)\n"
@@ -618,6 +665,18 @@ def main() -> int:
     edit_file(root / "chrome/browser/devtools/chrome_devtools_manager_delegate.cc",
               ANCHOR_DELEGATE, NEW_DELEGATE, MARK_DELEGATE,
               "chrome_devtools_manager_delegate.cc (accept all)", mode="after")
+    edit_file(root / "chrome/browser/devtools/remote_debugging_server.cc",
+              ANCHOR_INCLUDE_ENV, NEW_INCLUDE_ENV, MARK_INCLUDE_ENV,
+              "remote_debugging_server.cc (include base/environment.h)", mode="after")
+    edit_file(root / "chrome/browser/devtools/remote_debugging_server.cc",
+              ANCHOR_INCLUDE_STR, NEW_INCLUDE_STR, MARK_INCLUDE_STR,
+              "remote_debugging_server.cc (include base/strings/string_util.h)", mode="after")
+    edit_file(root / "chrome/browser/devtools/remote_debugging_server.cc",
+              ANCHOR_SERVER_WRAP, NEW_CHANNEL_ENV, MARK_CHANNEL_ENV,
+              "remote_debugging_server.cc (CLEAN_CHROME_DEBUG channel env)", mode="after")
+    edit_file(root / "chrome/browser/devtools/remote_debugging_server.cc",
+              ANCHOR_PIPE_IF, NEW_PIPE_IF, MARK_PIPE_IF,
+              "remote_debugging_server.cc (env pipe start)", mode="replace")
     edit_file(root / "chrome/browser/devtools/remote_debugging_server.cc",
               ANCHOR_PORT, NEW_PORT, MARK_PORT,
               "remote_debugging_server.cc (default port 9222)", mode="after")

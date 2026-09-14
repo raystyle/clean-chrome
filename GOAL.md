@@ -9,7 +9,7 @@
 
 ## 锚点
 
-- **锚定的目标**：D02 Windows 侧：在本机编出 `chrome.exe` 且 `--auto-allow-devtools-connections` 生效（方案载体 P0001）
+- **锚定的目标**：D02-6 调试通道环境变量化：`CLEAN_CHROME_DEBUG=port|pipe|both`（默认 port,现行为 9222;pipe 只管道不开端口;both 都开）,管道由启动方传句柄（方案载体 S005 + 43 锚补丁扩展）
 
 ### 推进时间线
 
@@ -35,3 +35,4 @@
 | 2026-09-11 | D02 Windows 构建（Dev 验收） | 全绿：自编 chrome.exe/dll 带开关零弹窗,bh 端到端附着通;Release 分发产物待编 |
 | 2026-09-12 | D02 深化（Release 部署 + 43 锚网络清零 + 更名 clean-chrome） | Release 部署 C:\browse-rs 全绿;43 锚 32 文件净测 Google 域 0 外联（S004）;GitHub/本地全量更名;改名双坑 M018/M019 当日修复 |
 | 2026-09-13 | D02/D03 收官（三平台原子化重编 + 逐台验收） | **三平台完美产物**：预检矩阵过全部历史坑,三台全清从起点重编（Win 3h/mac 3h42m/linux 6h30m）,逐台四条全绿;本机另过 net-audit 0 外联/部署刷新/bh 冒烟;M020-M022 入库 |
+| 2026-09-14 | D02-6 调试通道环境变量化 | 全绿：CLEAN_CHROME_DEBUG 三态（port/pipe/both）,47 锚;管道走 io-pipes 句柄契约,范本 tools\pipe-smoke.py;三态矩阵+双形态等价全过;M023 入库;双机同步留后续 |

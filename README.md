@@ -14,6 +14,11 @@ uv run patches/apply-auto-allow.py --src-root C:/clean-chrome/chromium/src
 # 3 运行:无需任何参数,双击即用
 #    默认开 9222 调试端口、默认 User Data 零限制、零确认对话框、零提示条
 out\Dev\chrome.exe
+
+# 4 调试通道选择(环境变量,S005):CLEAN_CHROME_DEBUG=port|pipe|both
+#    未设=port(默认 9222);pipe=只 CDP 管道不开端口(启动器传
+#    --remote-debugging-io-pipes=<读句柄>,<写句柄>,范本 tools/pipe-smoke.py);
+#    both=双通道;显式命令行开关永远优先于变量
 ```
 
 ## 研究结论速览

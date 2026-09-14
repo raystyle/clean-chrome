@@ -13,12 +13,13 @@
 | 入口 | `README.md` | 项目概貌、结论表、快速开始指针 |
 | 根原语 | `PRD.md` `GOAL.md` `PLAN.md` `TODO.md` | 需求/目标/计划/进度 |
 | 协作规则 | `AGENTS.md`（`CLAUDE.md` 一行桥接） | 唯一权威源 |
-| 补丁 | `patches\apply-auto-allow.py` | 锚定式补丁脚本（uv 运行,43 锚 32 文件,三模式,默认用,幂等;2026-09-11 起替代 ps1） |
-| 补丁 | `patches\auto-allow-devtools-connections-152.0.7977.84.patch` | 钉 tag 标准补丁（与脚本等价,43 锚） |
+| 补丁 | `patches\apply-auto-allow.py` | 锚定式补丁脚本（uv 运行,47 锚 32 文件,三模式,默认用,幂等;2026-09-11 起替代 ps1） |
+| 补丁 | `patches\auto-allow-devtools-connections-152.0.7977.84.patch` | 钉 tag 标准补丁（与脚本等价,47 锚） |
 | 工具 | `tools\net-probe.py` | 网络通道稳定性评估（uv 运行 PEP 723,全平台,见 R001 替代路线） |
 | 工具 | `tools\net-audit.py` | 产物网络行为审计（net-log 全进程 Google 域外联统计,S004 实证工具） |
 | 工具 | `tools\deploy-release.py` | Release 产物部署自包含目录至 C:\browse-rs（SxS manifest 必带） |
 | 工具 | `tools\pack-tree.py` | 构建树打包分发（双机同步用,配 R001 分发节） |
+| 工具 | `tools\pipe-smoke.py` | 管道通道验收/启动器范本（Windows io-pipes 契约,S005） |
 | 构建 | `args.gn` | GN 参数唯一权威（enable_nacl 已删勿写） |
 | 验证产物 | `poc\S001-chromium152-auto-allow\` | 152 原始/补丁后参照树（orig/base/patched，只读） |
 | 文档 | `docs\`（proven/diary/research/references/guide/mistakes） | 六目录 |
@@ -39,6 +40,7 @@
 | 2026-09-11 | `docs\diary\2026-09-11-项目启动研究与立项.md` | 研究核实、补丁就绪、骨架立项 |
 | 2026-09-12 | `docs\diary\2026-09-12-双机部署与网络触点清零.md` | 双机分发攻坚、网络触点清零 43 锚、项目更名 clean-chrome |
 | 2026-09-13 | `docs\diary\2026-09-13-三平台收官验收.md` | 三平台原子化重编收官、逐台验收全绿 |
+| 2026-09-14 | `docs\diary\2026-09-14-调试通道环境变量化.md` | CLEAN_CHROME_DEBUG 三态通道选择落地（47 锚） |
 
 ## 五、研究文档
 
@@ -48,6 +50,7 @@
 | S002 | `docs\research\S002-CDP调试-提示限制与检测特征全景.md` | 提示/限制/检测特征逐项移除层与保留建议(五文件六锚定档) |
 | S003 | `docs\research\S003-浏览器静默化定制清单.md` | 启动静默与 Google 触点 UI 剔除(19 锚定档与验证全绿) |
 | S004 | `docs\research\S004-网络触点剔除-Google外联与遥测清零.md` | 网络层 Google 域外联与遥测清零(.invalid 端点+feature/pref,43 锚净测 0 外联) |
+| S005 | `docs\research\S005-调试管道-remote-debugging-pipe机制与通道环境变量.md` | CDP 管道机制(io-pipes 契约/断线关闸)与 CLEAN_CHROME_DEBUG 三态通道选择(47 锚) |
 
 ## 六、references 现役流程
 
@@ -74,6 +77,7 @@
 | M020 | `docs\mistakes\MISTAKES.md`（单文件） | 跨平台脚本用了 py3.10+ 的 write_text(newline=),mac CLT 3.9.6 崩于半打状态 | M020 |
 | M021 | `docs\mistakes\MISTAKES.md`（单文件） | Dev(symbol_level=1) 全编内存高于 Release,叠加常驻浏览器触发低水位杀任务,降 j 并收浏览器 | M021 |
 | M022 | `docs\mistakes\MISTAKES.md`（单文件） | ssh compound 里 pkill -f 同串文本自杀外壳（exit 255）,远端杀进程用 pkill -x | M022 |
+| M023 | `docs\mistakes\MISTAKES.md`（单文件） | 写锚凭旧 API 记忆翻车(GetVar 152 已改单参 optional),写锚前先 rg 目标树实际签名 | M023 |
 
 ## 九、阶段与版本
 

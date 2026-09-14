@@ -1,15 +1,17 @@
 # TODO：当前目标任务进度清单
 
 > 角色：当前目标的任务进度清单。目标完成后回填 docs/proven 对应方案，起新清单。
-> 2026-09-13 收官快照：D02/D03 三平台完美产物达成（43 锚 clean-chrome 原子化同步重编,逐台验收全绿）。
+> 2026-09-14 快照：D02-6 调试通道环境变量化收官（47 锚,三态矩阵全绿）。
 
 ## 任务进度清单
 
 | 任务项 | 进行中 | 说明 | 日期 |
 | --- | --- | --- | --- |
-| **三平台原子化全编 + 逐台验收（D02/D03 收官）** | 已完成 | 三台同步 43 锚（32 文件清单逐字节一致）后全清从起点重编：Win -j16 / mac -j6 caffeinate 3h42m / linux -j8 6h30m,全部 Build Succeeded 零 FAILED;**逐台验收全绿**：开关入二进制（Win chrome.dll / mac Chromium Framework / linux chrome,各 grep=1）+ 无参 9222 + WS 即时 101 零对话框 + about:blank;linux 以 headless 过验,GUI 验收法与 sandbox 处置沉淀 R001 坑表 18-20 | 2026-09-13 |
-| 本机扩展验收 | 已完成 | net-audit 真实 Google 域 0 外联（触点全 .invalid）;deploy 刷新 C:\browse-rs（499 文件 652MB,SxS manifest）;bh 附着端到端（goto_url+js 取回页面状态,专属 tab 已关） | 2026-09-13 |
-| 双机 43 锚同步 | 已完成 | 预检矩阵过全部历史坑：清 index.lock（M006）,checkout 回滚 19 锚（13 M + 137/154 D 占位还原）,脚本修 py3.9 兼容（M020）重分发,mac 43 ok / linux 43 skip 幂等等价 | 2026-09-12 |
-| 本机 out\Dev 全编 | 已完成 | -j8 跑完（M021 降并发后全程稳定,blink 谷段拖长,实际约 9h）;验收过：开关入 chrome.dll grep=1 + 无参 9222 + 首页 about:blank 冒烟;**Debug+Release 双目录齐**,改补丁分钟级迭代就绪 | 2026-09-13 |
-| D03 文档收口批次 | 已完成 | GOAL 历史/进程、CHANGELOG 封版、diary、M020-M022 入库、R001 坑表 18-20、INDEX、TODO 重写 | 2026-09-13 |
-| 历史完成项 | - | 更名收口（11 文件 86 处/GitHub rename/目录改名落地）、S004 网络触点清零、R001 分发节、M014-M019 入库等,详见 GOAL 历史与 CHANGELOG | 2026-09-12 |
+| S005 管道机制研究定稿 | 已完成 | 机制/契约/安全模型/设计全落,六态全勾 | 2026-09-14 |
+| 通道选择锚点实现 | 已完成 | 4 新锚 + 1 改造,43 至 47 锚;M023（GetVar 签本）当日入库当日修 | 2026-09-14 |
+| .patch 双形态等价 + 幂等验证 | 已完成 | 沙盒 git apply 后 32 文件字节比对全一致;迁移重打 ok=6/skip=41 | 2026-09-14 |
+| Release + Dev 增量重编 | 已完成 | 两目录均 Build Succeeded（Release 约 4 分钟,Dev 分钟级） | 2026-09-14 |
+| 三态验收矩阵 | 已完成 | unset 至 9222 照旧;pipe 至 管道 getTargets 往返+9222 不听;both 至 双通道;范本 tools\pipe-smoke.py | 2026-09-14 |
+| 文档同步 + 提交推送 | 已完成 | README/R001/CHANGELOG/INDEX/diary/S005/M023 全同步;feat: 一笔 | 2026-09-14 |
+| 双机 47 锚同步 | 待办（后续分发） | 各自 checkout remote_debugging_server.cc + 新脚本重打（ok=6）+ 增量编译;现有 43 锚产物行为不受影响 | 2026-09-14 |
+| 部署版 browse-rs 刷新 | 待办（可选） | 47 锚版验收已过,部署目录仍是 43 锚版;下次部署时 `uv run tools\deploy-release.py` 一键刷新 | 2026-09-14 |
