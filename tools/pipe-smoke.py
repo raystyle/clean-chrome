@@ -23,9 +23,11 @@ import argparse
 import json
 import msvcrt
 import os
+import queue
 import socket
 import subprocess
 import sys
+import threading
 import time
 
 
@@ -65,20 +67,55 @@ def main() -> int:
         "--remote-debugging-io-pipes=%d,%d" % (in_h, out_h),
         "--user-data-dir=" + args.profile,
     ]
-    proc = subprocess.Popen(cmd, env=env, close_fds=False)
-    print("[launch] pid=%d mode=%s io-pipes=%d,%d" % (proc.pid, args.mode, in_h, out_h))
+    # Keep the browser's std handles out of the picture (a console-less
+    # parent's inherited std handles change launcher behaviour) and keep a
+    # log for post-mortem.
+    log_path = os.path.join(os.path.dirname(args.profile) or ".", "pipe-smoke-browser.log")
+    log = open(log_path, "wb")
+    proc = subprocess.Popen(cmd, env=env, close_fds=False,
+                            stdin=subprocess.DEVNULL, stdout=log, stderr=log)
+    print("[launch] pid=%d mode=%s io-pipes=%d,%d log=%s" % (proc.pid, args.mode, in_h, out_h, log_path))
 
     try:
+        # Reader thread: os.read on a Windows pipe blocks forever, so the
+        # deadline must live on the consumer side (queue with timeout).
+        chunks: "queue.Queue[bytes]" = queue.Queue()
+
+        def _reader(fd: int, q: "queue.Queue[bytes]") -> None:
+            try:
+                while True:
+                    data = os.read(fd, 65536)
+                    if not data:
+                        break
+                    q.put(data)
+            except OSError:
+                pass
+            q.put(b"")
+
+        threading.Thread(target=_reader, args=(out_r, chunks), daemon=True).start()
+
         request = json.dumps({"id": 1, "method": "Target.getTargets"}).encode() + b"\0"
         os.write(in_w, request)
         deadline = time.time() + args.timeout
         response = b""
         while time.time() < deadline and b"\0" not in response:
-            chunk = os.read(out_r, 65536)
-            if chunk:
-                response += chunk
+            try:
+                item = chunks.get(timeout=1)
+            except queue.Empty:
+                continue
+            if not item:
+                break
+            response += item
         if b"\0" not in response:
             print("[fail] no CDP response within %ds (raw %d bytes)" % (args.timeout, len(response)))
+            print("[fail] chrome alive=%s; browser log tail:" % (proc.poll() is None))
+            try:
+                log.flush()
+                with open(log_path, "rb") as f:
+                    tail = f.read()[-800:].decode("utf-8", "replace")
+                print(tail or "(empty)")
+            except OSError:
+                pass
             return 1
         msg = json.loads(response.split(b"\0")[0])
         result = msg.get("result", msg)
@@ -95,11 +132,17 @@ def main() -> int:
         return 0
     finally:
         if not args.keep:
-            proc.terminate()
+            try:
+                proc.terminate()
+            except OSError:
+                pass
             try:
                 proc.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                proc.kill()
+            except (subprocess.TimeoutExpired, OSError):
+                try:
+                    proc.kill()
+                except OSError:
+                    pass
             for fd in (in_r, in_w, out_r, out_w):
                 try:
                     os.close(fd)
