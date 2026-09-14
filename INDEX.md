@@ -13,8 +13,8 @@
 | 入口 | `README.md` | 项目概貌、结论表、快速开始指针 |
 | 根原语 | `PRD.md` `GOAL.md` `PLAN.md` `TODO.md` | 需求/目标/计划/进度 |
 | 协作规则 | `AGENTS.md`（`CLAUDE.md` 一行桥接） | 唯一权威源 |
-| 补丁 | `patches\apply-auto-allow.py` | 锚定式补丁脚本（uv 运行,47 锚 32 文件,三模式,默认用,幂等;2026-09-11 起替代 ps1） |
-| 补丁 | `patches\auto-allow-devtools-connections-152.0.7977.84.patch` | 钉 tag 标准补丁（与脚本等价,47 锚） |
+| 补丁 | `patches\apply-auto-allow.py` | 锚定式补丁脚本（uv 运行,48 锚 33 文件,三模式,默认用,幂等;2026-09-11 起替代 ps1） |
+| 补丁 | `patches\auto-allow-devtools-connections-152.0.7977.84.patch` | 钉 tag 标准补丁（与脚本等价,48 锚） |
 | 工具 | `tools\net-probe.py` | 网络通道稳定性评估（uv 运行 PEP 723,全平台,见 R001 替代路线） |
 | 工具 | `tools\net-audit.py` | 产物网络行为审计（net-log 全进程 Google 域外联统计,S004 实证工具） |
 | 工具 | `tools\deploy-release.py` | Release 产物部署自包含目录至 C:\browse-rs（SxS manifest 必带） |

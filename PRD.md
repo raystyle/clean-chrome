@@ -29,3 +29,5 @@
 | D02-5 | 项目与仓库更名 clean-chrome | 2026-09-12 | 已交付（GitHub/本地目录/补丁 marker 全量落地） | GitHub repo 已改;本地目录 2026-09-12 夜改名;补丁 marker 与文档自称已全量更替 |
 
 | D02-6 | 调试管道（--remote-debugging-pipe）开启研究 | 2026-09-14 | 已交付（`CLEAN_CHROME_DEBUG=port|pipe|both` 47 锚落地,三态矩阵全绿,S005 六态全勾） | 第 1 轮澄清:用户裁定,启动时**自动初始**通道形态,由环境变量控制 port/pipe/both,默认 port=9222 现行为;pipe=只管道不开端口;both=都开。管道句柄由启动方传入;S005 收编 |
+
+| D02-7 | 剔除 bad-flags 黄条警告（您使用的是不受支持的命令行标记 --no-sandbox 等） | 2026-09-14 | 已交付（2026-09-15,48 锚 33 文件,三台同步,本机整屏截图目检无黄条） | 用户裁定;lan-linux/lan-ubuntu 因 AppArmor userns 限制须 --no-sandbox 启动,每次弹黄条;S003 家族收编;锚点落 bad_flags_prompt.cc |

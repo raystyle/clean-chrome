@@ -36,3 +36,4 @@
 | 2026-09-12 | D02 深化（Release 部署 + 43 锚网络清零 + 更名 clean-chrome） | Release 部署 C:\browse-rs 全绿;43 锚 32 文件净测 Google 域 0 外联（S004）;GitHub/本地全量更名;改名双坑 M018/M019 当日修复 |
 | 2026-09-13 | D02/D03 收官（三平台原子化重编 + 逐台验收） | **三平台完美产物**：预检矩阵过全部历史坑,三台全清从起点重编（Win 3h/mac 3h42m/linux 6h30m）,逐台四条全绿;本机另过 net-audit 0 外联/部署刷新/bh 冒烟;M020-M022 入库 |
 | 2026-09-14 | D02-6 调试通道环境变量化 | 全绿：CLEAN_CHROME_DEBUG 三态（port/pipe/both）,47 锚;管道走 io-pipes 句柄契约,范本 tools\pipe-smoke.py;三态矩阵+双形态等价全过;M023 入库;双机同步留后续 |
+| 2026-09-15 | D02-7 bad-flags 黄条剔除 + linux 换机 lan-ubuntu | 全绿：48 锚 33 文件三台对齐,--no-sandbox 无黄条（截图目检）;lan-ubuntu rsync 全量分发（含 out/ 保增量态）,迁移+增量 4 步 21.6s+首跑验收全过;browse-rs 部署仍 47 锚,下次部署带 48 |

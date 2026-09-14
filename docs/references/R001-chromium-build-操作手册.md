@@ -260,6 +260,6 @@ npm i --no-save --no-package-lock --ignore-scripts @rollup/rollup-<plat>@<pin>
 | 15 | 系统装过 Go 且设了 GOROOT | dawn/tint 生成器 go 版本错配（M009），构建 shell 先 `GOROOT/GOPATH/GOCACHE` 置空；项目内工具链优先，勿让系统 go/python 环境变量外泄进构建 |
 | 16 | 根目录改名后续编秒错 fork/exec 旧绝对路径 | ninja 生成物内嵌生成时刻绝对路径，重跑 gn gen 同参数再续编（M018） |
 | 17 | agent 会话（PYTHONUTF8=1）续编重 gen 后的树 | 两个互斥编码坑：acls action 读 icacls 本地化名（GBK）按 utf-8 崩,剥变量后 json5 又读旧 gen 产物按 cp936 崩；修法：保留 PYTHONUTF8=1,单独无变量 shell 手跑 acls 预 stamp,续编显式 -j 16 防内存峰值（M019） |
-| 18 | Ubuntu 23.10+ 启动自编 chrome 报 `No usable sandbox!` 即崩 | AppArmor 禁了非特权 userns；部署层问题非产物缺陷。临时 `--no-sandbox`；长期 root 设 `sysctl kernel.apparmor_restrict_unprivileged_userns=0` 或 setuid chrome_sandbox（chown root:root + chmod 4755） |
+| 18 | Ubuntu 23.10+ 启动自编 chrome 报 `No usable sandbox!` 即崩 | AppArmor 禁了非特权 userns；部署层问题非产物缺陷。临时 `--no-sandbox`；长期 root 设 `sysctl kernel.apparmor_restrict_unprivileged_userns=0` 或 setuid chrome_sandbox（chown root:root + chmod 4755）;**2026-09-15 起 --no-sandbox 不再弹黄条**（bad-flags infobar 已被 48 锚补丁剔除,D02-7） |
 | 19 | linux 无显示器跑 GUI 版验收：Xvfb 下进程活着但调试端口迟迟不开 | Xvfb 软渲染路径拖慢启动；用 `--headless=new` 验收最快（调试服务起得早,不依赖显示栈）；headless 下无参默认 9222/WS 握手/about:blank 全可验 |
 | 20 | ssh compound 命令里 `pkill -f` 带路径模式整条秒断（exit 255） | pkill -f 扫整条 cmdline,命令里 user-data-dir 等同串文本触发自杀（M022）；远端杀进程一律 `pkill -x chrome` 或拆成独立 ssh 调用 |

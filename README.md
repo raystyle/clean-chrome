@@ -19,6 +19,9 @@ out\Dev\chrome.exe
 #    未设=port(默认 9222);pipe=只 CDP 管道不开端口(启动器传
 #    --remote-debugging-io-pipes=<读句柄>,<写句柄>,范本 tools/pipe-smoke.py);
 #    both=双通道;显式命令行开关永远优先于变量
+
+# 5 不受支持的命令行标记黄条(--no-sandbox 等 bad-flags infobar)已剔除
+#    (D02-7,--no-sandbox 启动干干净净)
 ```
 
 ## 研究结论速览

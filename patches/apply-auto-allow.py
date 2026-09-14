@@ -4,7 +4,7 @@
 # ///
 """apply-auto-allow.py -- clean-chrome anchored patcher (uv, cross-platform).
 
-Patches 32 files of a Chromium checkout with 47 anchors (exact upstream bytes
+Patches 33 files of a Chromium checkout with 48 anchors (exact upstream bytes
 at tag 152.0.7977.84, chosen to hold across nearby tags). Families: CDP
 friction, startup silence, Google touchpoint removal, network endpoint
 zeroing (see docs/research S002/S003/S004 for the full ledger).
@@ -124,6 +124,32 @@ NEW_PIPE_IF = (
     "      clean_chrome_pipe) {"
 )
 MARK_PIPE_IF = "      clean_chrome_pipe) {"
+
+# --- unsupported-flag warning suppression (D02-7) ------------------------------
+
+ANCHOR_BAD_FLAGS = (
+    "  for (const char* flag : kBadFlags) {\n"
+    "    if (base::CommandLine::ForCurrentProcess()->HasSwitch(flag)) {\n"
+    "      ShowBadFlagsInfoBar(web_contents, IDS_BAD_FLAGS_WARNING_MESSAGE, flag);\n"
+    "      return;\n"
+    "    }\n"
+    "  }"
+)
+NEW_BAD_FLAGS = (
+    "  // clean-chrome: never show the unsupported-command-line-flag warning\n"
+    "  // infobar (local automation build only). We intentionally launch with\n"
+    "  // flags like --no-sandbox on userns-restricted Linux hosts where the\n"
+    "  // yellow warning bar would be pure noise.\n"
+    "  bool clean_chrome_suppress_bad_flags = true;\n"
+    "  for (const char* flag : kBadFlags) {\n"
+    "    if (!clean_chrome_suppress_bad_flags &&\n"
+    "        base::CommandLine::ForCurrentProcess()->HasSwitch(flag)) {\n"
+    "      ShowBadFlagsInfoBar(web_contents, IDS_BAD_FLAGS_WARNING_MESSAGE, flag);\n"
+    "      return;\n"
+    "    }\n"
+    "  }"
+)
+MARK_BAD_FLAGS = "  bool clean_chrome_suppress_bad_flags = true;"
 
 ANCHOR_USER_DATA = (
     "#if BUILDFLAG(GOOGLE_CHROME_BRANDING)\n"
@@ -680,6 +706,9 @@ def main() -> int:
     edit_file(root / "chrome/browser/devtools/remote_debugging_server.cc",
               ANCHOR_PORT, NEW_PORT, MARK_PORT,
               "remote_debugging_server.cc (default port 9222)", mode="after")
+    edit_file(root / "chrome/browser/ui/startup/bad_flags_prompt.cc",
+              ANCHOR_BAD_FLAGS, NEW_BAD_FLAGS, MARK_BAD_FLAGS,
+              "bad_flags_prompt.cc (no unsupported-flag infobar)", mode="replace")
     edit_file(root / "chrome/browser/devtools/remote_debugging_server.cc",
               ANCHOR_USER_DATA, NEW_USER_DATA, MARK_USER_DATA,
               "remote_debugging_server.cc (no user-data-dir gate)", mode="replace")
