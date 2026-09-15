@@ -53,6 +53,7 @@
 | S004 | `docs\research\S004-网络触点剔除-Google外联与遥测清零.md` | 网络层 Google 域外联与遥测清零(.invalid 端点+feature/pref,43 锚净测 0 外联) |
 | S005 | `docs\research\S005-调试管道-remote-debugging-pipe机制与通道环境变量.md` | CDP 管道机制(io-pipes 契约/断线关闸)与 CLEAN_CHROME_DEBUG 三态通道选择(47 锚) |
 | S006 | `docs\research\S006-console参数预览抑制-通道图与收口设计.md` | console 参数/未捕获异常预览抑制(50 锚);152 实测通道图:preview 不调 getter/Proxy,文本通道 stock 一致非差分不可关(反造差分) |
+| S007 | `docs\research\S007-palimpsest3-CDP隐蔽方案复核与改进意见.md` | 外部 issue#3 复核:其 Runtime.enable 检测向量在 155/152 实测已死(文本通道无差分),改进意见清单与反差分纪律 |
 
 ## 六、references 现役流程
 
