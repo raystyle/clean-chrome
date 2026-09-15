@@ -241,26 +241,35 @@ npm i --no-save --no-package-lock --ignore-scripts @rollup/rollup-<plat>@<pin>
 
 ## 十、常见坑速查
 
-| # | 坑 | 处置 |
-| --- | --- | --- |
-| 1 | 路径含空格 | 全程 `C:\clean-chrome` 无空格 |
-| 2 | Windows 首跑 gclient 用了 PowerShell | msysgit/python 装坏，删掉重来，必须 cmd.exe |
-| 3 | 没设 DEPOT_TOOLS_WIN_TOOLCHAIN=0 | 外部开发者直接失败 |
-| 4 | autocrlf 没设 false | 行尾污染，patch 应用异常 |
-| 5 | args 写了 enable_nacl=false | 上游已删，gn gen 报未知参数 |
-| 6 | Linux 没跑 install-build-deps.sh | 依赖缺失编译失败 |
-| 7 | 跟 main 不跟 tag | 补丁对不上（152 与 main 已实证漂移） |
-| 8 | 杀毒扫描 out 目录 | 链接极慢，加 Defender 排除 |
-| 9 | 默认 User Data 开调试端口 | 仅锁官方品牌 Chrome（GOOGLE_CHROME_BRANDING 编译开关,remote_debugging_server.cc:169）；自编非 branded Chromium 默认目录也可直接开端口（2026-09-11 实测 9223 通）；--user-data-dir 仍推荐,作实例隔离与 profile 复用 |
-| 10 | 把调试端口暴露外网 | 开关一开即全控制权，端口只听 127.0.0.1，禁配 --remote-debugging-address |
-| 11 | pip.ini 带 BOM | vpython venv 构建必炸，无 BOM 重写（M008） |
-| 12 | 停 fetch/gclient 任务后留残骸 | M006 全套清场再重启 |
-| 13 | VS 组件图找不到 DebuggingTools 包 | 装 Debuggers 用 winsdksetup /features，见工具链节 |
-| 14 | tar 解压报 symlink Invalid argument | 预期行为（约 7 个），git checkout 按 core.symlinks=false 补齐 |
-| 15 | 系统装过 Go 且设了 GOROOT | dawn/tint 生成器 go 版本错配（M009），构建 shell 先 `GOROOT/GOPATH/GOCACHE` 置空；项目内工具链优先，勿让系统 go/python 环境变量外泄进构建 |
-| 16 | 根目录改名后续编秒错 fork/exec 旧绝对路径 | ninja 生成物内嵌生成时刻绝对路径，重跑 gn gen 同参数再续编（M018） |
-| 17 | agent 会话（PYTHONUTF8=1）续编重 gen 后的树 | 两个互斥编码坑：acls action 读 icacls 本地化名（GBK）按 utf-8 崩,剥变量后 json5 又读旧 gen 产物按 cp936 崩；修法：保留 PYTHONUTF8=1,单独无变量 shell 手跑 acls 预 stamp,续编显式 -j 16 防内存峰值（M019） |
-| 18 | Ubuntu 23.10+ 启动自编 chrome 报 `No usable sandbox!` 即崩 | AppArmor 禁了非特权 userns；部署层问题非产物缺陷。临时 `--no-sandbox`；长期 root 设 `sysctl kernel.apparmor_restrict_unprivileged_userns=0` 或 setuid chrome_sandbox（chown root:root + chmod 4755）;**2026-09-15 起 --no-sandbox 不再弹黄条**（bad-flags infobar 已被 48 锚补丁剔除,D02-7） |
-| 19 | linux 无显示器跑 GUI 版验收：Xvfb 下进程活着但调试端口迟迟不开 | Xvfb 软渲染路径拖慢启动；用 `--headless=new` 验收最快（调试服务起得早,不依赖显示栈）；headless 下无参默认 9222/WS 握手/about:blank 全可验 |
-| 20 | ssh compound 命令里 `pkill -f` 带路径模式整条秒断（exit 255） | pkill -f 扫整条 cmdline,命令里 user-data-dir 等同串文本触发自杀（M022）；远端杀进程一律 `pkill -x chrome` 或拆成独立 ssh 调用 |
-| 21 | browse-rs 部署目录刷新后沙箱态启动即崩（0x5,AppContainer AccessCheck）,--no-sandbox 正常 | 部署目录重建抹掉 ALL RESTRICTED APPLICATION PACKAGES ACE（M027）；deploy-release.py 已内置 icacls 自愈,老部署目录手工补 `icacls <dir> /grant *S-1-15-2-2:(OI)(CI)(RX) /T`;排障对比 SDDL 而非本地化显示名 |
+> M0xx 为错误链稳定行号（diary 当日记现象,本表与 G002 坑对照表为权威处置落位;M001 至 M027 全量档案自 2026-09-15 起由本表与 G002 承接）。补丁脚本与字节产物类坑（M001 至 M003,M011 至 M013,M017,M020,M023 至 M026）见 G002。
+
+| # | M | 坑 | 处置 |
+| --- | --- | --- | --- |
+| 1 | | 路径含空格 | 全程 `C:\clean-chrome` 无空格 |
+| 2 | | Windows 首跑 gclient 用了 PowerShell | msysgit/python 装坏，删掉重来，必须 cmd.exe |
+| 3 | | 没设 DEPOT_TOOLS_WIN_TOOLCHAIN=0 | 外部开发者直接失败 |
+| 4 | M004 | autocrlf 没设 false | 全局 `core.autocrlf=true` 令 git apply 全文重写 CRLF,字节比对失真;Chromium 仓必须 false,判据是 `git apply --check` 通过加内容等价 |
+| 5 | | args 写了 enable_nacl=false | 上游已删，gn gen 报未知参数 |
+| 6 | | Linux 没跑 install-build-deps.sh | 依赖缺失编译失败 |
+| 7 | | 跟 main 不跟 tag | 补丁对不上（152 与 main 已实证漂移） |
+| 8 | | 杀毒扫描 out 目录 | 链接极慢，加 Defender 排除 |
+| 9 | | 默认 User Data 开调试端口 | 仅锁官方品牌 Chrome（GOOGLE_CHROME_BRANDING 编译开关,remote_debugging_server.cc:169）；自编非 branded Chromium 默认目录也可直接开端口（2026-09-11 实测 9223 通）；--user-data-dir 仍推荐,作实例隔离与 profile 复用 |
+| 10 | | 把调试端口暴露外网 | 开关一开即全控制权，端口只听 127.0.0.1，禁配 --remote-debugging-address |
+| 11 | M008 | pip.ini 带 BOM | BOM 令 pip 首行解析失败,vpython venv 构建必炸;无 BOM UTF-8 重写（内容原样保留） |
+| 12 | M006 | 停 fetch/gclient 任务后留残骸 | 只杀 cmd 外壳会残留 git 子进程、`src\.git\shallow.lock`、半成品 `src\`、`_gclient_*`;全套清场（Stop-Process git,git-remote-https + 删残留）再重启,fetch 要求空目录且失败不续传 |
+| 13 | | VS 组件图找不到 DebuggingTools 包 | 装 Debuggers 用 winsdksetup /features，见工具链节 |
+| 14 | | tar 解压报 symlink Invalid argument | 预期行为（约 7 个），git checkout 按 core.symlinks=false 补齐 |
+| 15 | M009 | 系统装过 Go 且设了 GOROOT | dawn/tint 生成器 go 版本错配（系统 GOROOT 污染树内 CIPD go）,构建 shell 先 `GOROOT/GOPATH/GOCACHE` 置空；项目内工具链优先，勿让系统 go/python 环境变量外泄进构建 |
+| 16 | M018 | 根目录改名后续编秒错 fork/exec 旧绝对路径 | ninja 生成物内嵌生成时刻绝对路径，重跑 gn gen 同参数再续编 |
+| 17 | M019 | agent 会话（PYTHONUTF8=1）续编重 gen 后的树 | 两个互斥编码坑：acls action 读 icacls 本地化名（GBK）按 utf-8 崩,剥变量后 json5 又读旧 gen 产物按 cp936 崩；修法：保留 PYTHONUTF8=1,单独无变量 shell 手跑 acls 预 stamp,续编显式 -j 16 防内存峰值 |
+| 18 | | Ubuntu 23.10+ 启动自编 chrome 报 `No usable sandbox!` 即崩 | AppArmor 禁了非特权 userns；部署层问题非产物缺陷。临时 `--no-sandbox`；长期 root 设 `sysctl kernel.apparmor_restrict_unprivileged_userns=0` 或 setuid chrome_sandbox（chown root:root + chmod 4755）;**2026-09-15 起 --no-sandbox 不再弹黄条**（bad-flags infobar 已被 48 锚补丁剔除,D02-7） |
+| 19 | | linux 无显示器跑 GUI 版验收：Xvfb 下进程活着但调试端口迟迟不开 | Xvfb 软渲染路径拖慢启动；用 `--headless=new` 验收最快（调试服务起得早,不依赖显示栈）；headless 下无参默认 9222/WS 握手/about:blank 全可验 |
+| 20 | M022 | ssh compound 命令里 `pkill -f` 带路径模式整条秒断（exit 255） | pkill -f 扫整条 cmdline,命令里 user-data-dir 等同串文本触发自杀;远端杀进程一律 `pkill -x chrome` 或拆成独立 ssh 调用 |
+| 21 | M027 | browse-rs 部署目录刷新后沙箱态启动即崩（0x5,AppContainer AccessCheck）,--no-sandbox 正常 | 部署目录重建抹掉 ALL RESTRICTED APPLICATION PACKAGES ACE（S-1-15-2-2）;deploy-release.py 已内置 icacls 自愈,老部署目录手工补 `icacls <dir> /grant *S-1-15-2-2:(OI)(CI)(RX) /T`;排障对比 SDDL 而非本地化显示名 |
+| 22 | M010 | 杀测试实例把用户手动开的浏览器连带杀掉 | chrome singleton 按默认 user-data-dir 合并实例,测试句柄实为用户实例主进程;测试实例必须带独立 `--user-data-dir`,杀前核对目录独立性 |
+| 23 | M005 | 构建盘用外置 exFAT USB 盘,fetch/VS 安装反复「文件损坏」掉线 | 无日志文件系统小文件高压写触发脏位与瞬时掉线;Chromium checkout 必须内置 NTFS 盘,开工前 `Get-Volume` 查 HealthStatus |
+| 24 | M021 | Dev 全编被系统低内存杀任务 | Dev 的 symbol_level=1 单进程内存显著高于 Release,叠加常驻浏览器撞低水位;编译前收非必要浏览器,Dev 全编 -j12 实证稳,被杀重跑同命令增量自愈 |
+| 25 | M014 | Windows 树分发到 linux/mac 后 PermissionError | tar 不保 POSIX x 位且 CIPD 资产无 mode 记录;落地按八节修法恢复执行位（git 记录全量 + git 外资产兜底,只做其一必踩下一处） |
+| 26 | M015 | 分发树落地三连死:缺 gn 可执行文件/缺平台原生 npm 包 | 平台资产天然分平台,runhooks 装不了 CIPD 依赖;先 `gclient sync` 只补本机平台 CIPD,两棵 node_modules 按八节修法分别处理 |
+| 27 | M016 | linux 编到 29% 崩 protobuf `no attribute Type` | 树内 runtime 带兼容补丁,venv wheel 是纯 upstream,同版本号内容不同,混搭 import 即崩;用树内配套 runtime 全量覆盖两处（八节修法 4） |
+| 28 | M007 | 直连 googlesource/GitHub 时好时坏,git 卡死无限挂起 | 传输层间歇阻断,git 无低速超时默认值;先 net-probe 量化选路,`GIT_CONFIG_COUNT` 注入低速超时,清场-fetch-重试写循环挂后台（三节替代路线） |

@@ -12,6 +12,7 @@ out/
 *.log
 tmp/
 E:\tmp\cdp-dev
+__pycache__/
 
 # 密钥与本地环境
 *.key

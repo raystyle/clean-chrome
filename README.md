@@ -6,7 +6,7 @@
 
 ```powershell
 # 1 构建全流程照操作手册执行(唯一权威)
-docs\references\R001-chromium-build-操作手册.md
+docs\guides\R001-chromium-build-操作手册.md
 
 # 2 打补丁(锚定式,幂等,uv 全平台)
 uv run patches/apply-auto-allow.py --src-root C:/clean-chrome/chromium/src
@@ -21,10 +21,10 @@ out\Dev\chrome.exe
 #    both=双通道;显式命令行开关永远优先于变量
 
 # 5 不受支持的命令行标记黄条(--no-sandbox 等 bad-flags infobar)已剔除
-#    (D02-7,--no-sandbox 启动干干净净)
+#    (REQ-008,--no-sandbox 启动干干净净)
 
 # 6 console 参数与未捕获异常经 CDP 上报不带 eager 预览
-#    (D02-8,S006):ConsoleAPICalled/exceptionThrown 的 RemoteObject 保留
+#    (REQ-009,S006):ConsoleAPICalled/exceptionThrown 的 RemoteObject 保留
 #    objectId 供按需取,但不再急切序列化对象数据进协议 payload;
 #    Runtime.evaluate 的 generatePreview 行为不变。实测 152 通道图:
 #    preview 本就不调 getter/Proxy 陷阱,文本通道与 stock 一致(非差分,保持原样)
@@ -49,9 +49,9 @@ out\Dev\chrome.exe
 ```
 patches\    补丁双形态(apply-auto-allow.py 锚定式 uv 运行 + 钉 tag 的 .patch,两者字节等价,50 锚 34 文件含 v8/ 树)
 args.gn     GN 参数唯一权威
-tools\      uv 运行 PEP 723 全平台工具(net-probe.py 网络通道评估)
+tools\      uv 运行 PEP 723 全平台工具(含 check.py 文档合规门禁)
 poc\        S001 验证参照树(152 原始与补丁后文件,只读)
-docs\       proven(方案) research(研究) references(操作手册) guide(规范) mistakes(错误库) diary(日记)
+docs\       adr(决策) requirements(需求) guides(操作手册与工作流) research(研究) diary(日记)
 ```
 
 ## 当前状态
@@ -59,7 +59,7 @@ docs\       proven(方案) research(研究) references(操作手册) guide(规�
 - 2026-09-15 D02-8 console 参数预览抑制收官：50 锚 34 文件（首入 v8/ 树）,四端验收矩阵全绿（本机 Dev/browse-rs 部署沙箱态/lan-mac/lan-ubuntu）;三机同补丁同 tag,browse-rs 已刷新至 50 锚
 - 历史里程碑：三平台全编收官（09-13）、网络触点清零 43 锚（09-12）、调试通道三态 47 锚（09-14）、bad-flags 黄条剔除 48 锚（09-15）
 
-项目状态与下一步见 `GOAL.md` 与 `TODO.md`。
+决策记录见 `docs\adr`,需求与验收见 `docs\requirements`,状态交接见 diary 最新篇与 `ROADMAP.md`。
 
 ## 安全注意
 
