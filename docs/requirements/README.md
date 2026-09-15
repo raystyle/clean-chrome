@@ -15,3 +15,4 @@
 | REQ-009 | implemented | must | console 参数预览抑制（D02-8） | docs/research/S006-console参数预览抑制-通道图与收口设计.md |
 | REQ-010 | implemented | must | 三平台构建对齐（D03） | docs/diary/2026-09-13-三平台收官验收.md |
 | REQ-011 | implemented | must | 文档体系迁移 dev-evo 五节合同 | tools/check.py |
+| REQ-012 | draft | must | 升 tag 155 三平台实战（待 155 stable,约 2026-09-23 触发） | |
