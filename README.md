@@ -22,6 +22,12 @@ out\Dev\chrome.exe
 
 # 5 不受支持的命令行标记黄条(--no-sandbox 等 bad-flags infobar)已剔除
 #    (D02-7,--no-sandbox 启动干干净净)
+
+# 6 console 参数与未捕获异常经 CDP 上报不带 eager 预览
+#    (D02-8,S006):ConsoleAPICalled/exceptionThrown 的 RemoteObject 保留
+#    objectId 供按需取,但不再急切序列化对象数据进协议 payload;
+#    Runtime.evaluate 的 generatePreview 行为不变。实测 152 通道图:
+#    preview 本就不调 getter/Proxy 陷阱,文本通道与 stock 一致(非差分,保持原样)
 ```
 
 ## 研究结论速览
@@ -41,7 +47,7 @@ out\Dev\chrome.exe
 ## 仓库结构
 
 ```
-patches\    补丁双形态(apply-auto-allow.ps1 锚定式 + 钉 tag 的 .patch,两者等价)
+patches\    补丁双形态(apply-auto-allow.py 锚定式 uv 运行 + 钉 tag 的 .patch,两者字节等价,50 锚 34 文件含 v8/ 树)
 args.gn     GN 参数唯一权威
 tools\      uv 运行 PEP 723 全平台工具(net-probe.py 网络通道评估)
 poc\        S001 验证参照树(152 原始与补丁后文件,只读)
@@ -50,9 +56,10 @@ docs\       proven(方案) research(研究) references(操作手册) guide(规�
 
 ## 当前状态
 
-- 2026-09-11 Windows 侧 Dev 构建验收全绿：自编 152 带 `--auto-allow-devtools-connections` 零对话框,bh 端到端附着可用（`BH_CDP_URL=http://127.0.0.1:9222`）;Release 分发产物待编。进度详见 GOAL/TODO
+- 2026-09-15 D02-8 console 参数预览抑制收官：50 锚 34 文件（首入 v8/ 树）,四端验收矩阵全绿（本机 Dev/browse-rs 部署沙箱态/lan-mac/lan-ubuntu）;三机同补丁同 tag,browse-rs 已刷新至 50 锚
+- 历史里程碑：三平台全编收官（09-13）、网络触点清零 43 锚（09-12）、调试通道三态 47 锚（09-14）、bad-flags 黄条剔除 48 锚（09-15）
 
-项目状态与下一步见 `GOAL.md` 与 `TODO.md`；当前目标 P0001（Windows 构建，进行中）。
+项目状态与下一步见 `GOAL.md` 与 `TODO.md`。
 
 ## 安全注意
 

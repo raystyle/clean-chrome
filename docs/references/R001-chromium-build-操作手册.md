@@ -232,7 +232,7 @@ npm i --no-save --no-package-lock --ignore-scripts @rollup/rollup-<plat>@<pin>
 
 4. **protobuf 崩**（`api_implementation has no attribute Type`）：树内 `third_party/protobuf/python` 是打过兼容补丁的 runtime，全量覆盖 venv site-packages 与 out/Release/pyproto 两处（M016）
 
-5. **本机部署**：`uv run tools\deploy-release.py` 把 out\Release 产物部署为自包含版本子目录至 C:\browse-rs（SxS manifest 必带，防与日常 Chrome 的注册类名互踩）；双机产物验收走六节四条对应平台版
+5. **本机部署**：`uv run tools\deploy-release.py` 把 out\Release 产物部署为自包含版本子目录至 C:\browse-rs（SxS manifest 必带，防与日常 Chrome 的注册类名互踩）；脚本已内置 AppContainer ACE 自愈（icacls 授 ALL RESTRICTED APPLICATION PACKAGES,防沙箱态 0x5 崩,M027）；双机产物验收走六节四条对应平台版
 
 ## 九、三台机器纪律
 
@@ -263,3 +263,4 @@ npm i --no-save --no-package-lock --ignore-scripts @rollup/rollup-<plat>@<pin>
 | 18 | Ubuntu 23.10+ 启动自编 chrome 报 `No usable sandbox!` 即崩 | AppArmor 禁了非特权 userns；部署层问题非产物缺陷。临时 `--no-sandbox`；长期 root 设 `sysctl kernel.apparmor_restrict_unprivileged_userns=0` 或 setuid chrome_sandbox（chown root:root + chmod 4755）;**2026-09-15 起 --no-sandbox 不再弹黄条**（bad-flags infobar 已被 48 锚补丁剔除,D02-7） |
 | 19 | linux 无显示器跑 GUI 版验收：Xvfb 下进程活着但调试端口迟迟不开 | Xvfb 软渲染路径拖慢启动；用 `--headless=new` 验收最快（调试服务起得早,不依赖显示栈）；headless 下无参默认 9222/WS 握手/about:blank 全可验 |
 | 20 | ssh compound 命令里 `pkill -f` 带路径模式整条秒断（exit 255） | pkill -f 扫整条 cmdline,命令里 user-data-dir 等同串文本触发自杀（M022）；远端杀进程一律 `pkill -x chrome` 或拆成独立 ssh 调用 |
+| 21 | browse-rs 部署目录刷新后沙箱态启动即崩（0x5,AppContainer AccessCheck）,--no-sandbox 正常 | 部署目录重建抹掉 ALL RESTRICTED APPLICATION PACKAGES ACE（M027）；deploy-release.py 已内置 icacls 自愈,老部署目录手工补 `icacls <dir> /grant *S-1-15-2-2:(OI)(CI)(RX) /T`;排障对比 SDDL 而非本地化显示名 |

@@ -9,7 +9,7 @@
 
 ## 锚点
 
-- **锚定的目标**：D02-6 调试通道环境变量化：`CLEAN_CHROME_DEBUG=port|pipe|both`（默认 port,现行为 9222;pipe 只管道不开端口;both 都开）,管道由启动方传句柄（方案载体 S005 + 43 锚补丁扩展）
+- **锚定的目标**：D02-8 console 参数预览抑制（收官 2026-09-15）：console.* 与未捕获异常经 CDP 上报不再急切序列化对象数据进协议 payload（50 锚 34 文件,首入 v8/ 树,objectId 保留按需可取）;evaluate 预览与文本通道保持原样（实测通道图定档,载体 S006）
 
 ### 推进时间线
 
@@ -20,13 +20,11 @@
 
 ## 进程
 
-- 当前目标：D02/D03 **三平台完美产物全部达成（2026-09-13）**：43 锚 clean-chrome 原子化同步（三台 32 文件清单逐字节一致）后各自全新全编,逐台验收全绿；余项仅本机 out\Dev 迭代目录全编收口
-- 本机 Windows：四条 + net-audit（真实 Google 域 0 外联,触点全 .invalid）+ deploy 刷新 C:\browse-rs（499 文件 652MB SxS manifest）+ bh 附着端到端（goto_url+js）
-- lan-mac：全编 3h42m,四条全绿（开关在 Chromium Framework 二进制,MacOS/Chromium 只是启动器）
-- lan-linux：全编 6h30m,headless 验收四条全绿（Ubuntu userns 限制用 --no-sandbox 过验,R001 坑表 18-20 沉淀：sandbox/headless 验收法/pkill 自匹配）
-- 网络受阻全程破局：googlesource/git-https/SSH 大流量均被间歇掐断（M007），改道 aria2x16 codeload tarball + GitHub SSH 归化官方 tag 对象 + gclient 循环与陪跑自愈拉齐 300+ 依赖仓 + insteadOf 镜像注入（skia/devtools-frontend/quiche）
-- 环境坑当日全修：pip.ini BOM（M008）、GOROOT 污染（M009）、-j32 OOM 降 j16、改名双坑（M018/M019）、Dev 低内存（M021）、pkill 自匹配（M022）
-- 工具链：tools\net-probe.py / net-audit.py（S004 实证）/ deploy-release.py（SxS manifest 部署）/ pack-tree.py（跨机分发）
+- 当前目标：D02-8 **console 参数预览抑制收官（2026-09-15）**：50 锚 34 文件（首入 v8/ 树 v8-console-message.cc 收口 reportToFrontend 两分支）,四端验收矩阵全绿（本机 Dev/browse-rs 部署沙箱态/lan-mac/lan-ubuntu 逐项一致：preview 消失、objectId 保留、evaluate 两态不变）
+- 前提修正两轮裁定定档（S006 通道图）：152 的 preview 不调 accessor/Proxy 陷阱（原验收 A 本就过）;文本通道 stock 一致非 CDP 差分,保持原样防反造差分;preview-off 实效=数据卫生+上游回归免疫
+- 三机同步：mac/ubuntu 脚本重打 ok=0/skip=50,增量 13 步 40.3s / 50 步 20.8s,树内 node v24.12.0 跑同探针验收
+- 顺带修复：M027 browse-rs AppContainer ACE（部署目录重建抹 ACE 致沙箱态 0x5 崩,deploy-release.py 已内置 icacls 自愈）;M024-M026（bh eval Node 环境/PS 管道换行污染/git apply 子目录 skip）入库
+- 前一里程碑：D02/D03 三平台完美产物（2026-09-13,43 锚全编）,D02-2 至 D02-7 子项全交付（历史行见下）
 
 ## 历史
 
@@ -37,3 +35,4 @@
 | 2026-09-13 | D02/D03 收官（三平台原子化重编 + 逐台验收） | **三平台完美产物**：预检矩阵过全部历史坑,三台全清从起点重编（Win 3h/mac 3h42m/linux 6h30m）,逐台四条全绿;本机另过 net-audit 0 外联/部署刷新/bh 冒烟;M020-M022 入库 |
 | 2026-09-14 | D02-6 调试通道环境变量化 | 全绿：CLEAN_CHROME_DEBUG 三态（port/pipe/both）,47 锚;管道走 io-pipes 句柄契约,范本 tools\pipe-smoke.py;三态矩阵+双形态等价全过;M023 入库;双机同步留后续 |
 | 2026-09-15 | D02-7 bad-flags 黄条剔除 + linux 换机 lan-ubuntu | 全绿：48 锚 33 文件三台对齐,--no-sandbox 无黄条（截图目检）;lan-ubuntu rsync 全量分发（含 out/ 保增量态）,迁移+增量 4 步 21.6s+首跑验收全过;browse-rs 部署仍 47 锚,下次部署带 48 |
+| 2026-09-15 | D02-8 console 参数预览抑制 | 全绿：50 锚 34 文件（首入 v8/ 树）;两轮裁定（范围三推荐+前提修正照规格落 preview-off）;四端验收矩阵一致（preview 消失/objectId 保留/evaluate 不变/A 过/B 文本通道记录性）;三机 ok=0/skip=50 同步增量;M024-M027 入库 |

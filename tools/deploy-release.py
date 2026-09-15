@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -117,6 +118,19 @@ def main() -> int:
         print("[ok]   initial_preferences (silent first run, S003)")
     else:
         print("[warn] no initial_preferences found; first run will not be silenced")
+
+    # AppContainer sandbox children (LPAC renderer et al.) must read+execute
+    # the exe image. Freshly recreated deploy dirs lack the ALL RESTRICTED
+    # APPLICATION PACKAGES ACE the build tree carries (inherited there), and a
+    # sandboxed start then dies with access denied 0x5 at
+    # sandbox_win.cc:804 (M027). Grant it explicitly on every deploy.
+    r = subprocess.run(
+        ["icacls", str(dest), "/grant", "*S-1-15-2-2:(OI)(CI)(RX)", "/T"],
+        capture_output=True, text=True)
+    if r.returncode == 0:
+        print("[ok]   AppContainer sandbox ACE (ALL RESTRICTED APPLICATION PACKAGES)")
+    else:
+        print(f"[warn] icacls ACE grant failed (sandboxed starts may 0x5): {r.stderr.strip()}")
 
     size_mb = sum(f.stat().st_size for f in dest.rglob("*") if f.is_file()) / 2**20
     print(f"\nDeployed {total} files ({size_mb:.0f} MB) -> {dest}")

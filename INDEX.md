@@ -13,8 +13,8 @@
 | 入口 | `README.md` | 项目概貌、结论表、快速开始指针 |
 | 根原语 | `PRD.md` `GOAL.md` `PLAN.md` `TODO.md` | 需求/目标/计划/进度 |
 | 协作规则 | `AGENTS.md`（`CLAUDE.md` 一行桥接） | 唯一权威源 |
-| 补丁 | `patches\apply-auto-allow.py` | 锚定式补丁脚本（uv 运行,48 锚 33 文件,三模式,默认用,幂等;2026-09-11 起替代 ps1） |
-| 补丁 | `patches\auto-allow-devtools-connections-152.0.7977.84.patch` | 钉 tag 标准补丁（与脚本等价,48 锚） |
+| 补丁 | `patches\apply-auto-allow.py` | 锚定式补丁脚本（uv 运行,50 锚 34 文件含首入 v8/ 树,三模式,默认用,幂等;2026-09-11 起替代 ps1） |
+| 补丁 | `patches\auto-allow-devtools-connections-152.0.7977.84.patch` | 钉 tag 标准补丁（与脚本等价,50 锚;v8 段路径带 v8/ 前缀,src 根 git apply） |
 | 工具 | `tools\net-probe.py` | 网络通道稳定性评估（uv 运行 PEP 723,全平台,见 R001 替代路线） |
 | 工具 | `tools\net-audit.py` | 产物网络行为审计（net-log 全进程 Google 域外联统计,S004 实证工具） |
 | 工具 | `tools\deploy-release.py` | Release 产物部署自包含目录至 C:\browse-rs（SxS manifest 必带） |
@@ -41,6 +41,7 @@
 | 2026-09-12 | `docs\diary\2026-09-12-双机部署与网络触点清零.md` | 双机分发攻坚、网络触点清零 43 锚、项目更名 clean-chrome |
 | 2026-09-13 | `docs\diary\2026-09-13-三平台收官验收.md` | 三平台原子化重编收官、逐台验收全绿 |
 | 2026-09-14 | `docs\diary\2026-09-14-调试通道环境变量化.md` | CLEAN_CHROME_DEBUG 三态通道选择落地（47 锚） |
+| 2026-09-15 | `docs\diary\2026-09-15-console参数预览抑制.md` | console 参数/异常 preview-off 落地（50 锚首入 v8/ 树）;通道图前提修正;M024-M027 |
 
 ## 五、研究文档
 
@@ -51,6 +52,7 @@
 | S003 | `docs\research\S003-浏览器静默化定制清单.md` | 启动静默与 Google 触点 UI 剔除(19 锚定档与验证全绿) |
 | S004 | `docs\research\S004-网络触点剔除-Google外联与遥测清零.md` | 网络层 Google 域外联与遥测清零(.invalid 端点+feature/pref,43 锚净测 0 外联) |
 | S005 | `docs\research\S005-调试管道-remote-debugging-pipe机制与通道环境变量.md` | CDP 管道机制(io-pipes 契约/断线关闸)与 CLEAN_CHROME_DEBUG 三态通道选择(47 锚) |
+| S006 | `docs\research\S006-console参数预览抑制-通道图与收口设计.md` | console 参数/未捕获异常预览抑制(50 锚);152 实测通道图:preview 不调 getter/Proxy,文本通道 stock 一致非差分不可关(反造差分) |
 
 ## 六、references 现役流程
 
@@ -78,6 +80,8 @@
 | M021 | `docs\mistakes\MISTAKES.md`（单文件） | Dev(symbol_level=1) 全编内存高于 Release,叠加常驻浏览器触发低水位杀任务,降 j 并收浏览器 | M021 |
 | M022 | `docs\mistakes\MISTAKES.md`（单文件） | ssh compound 里 pkill -f 同串文本自杀外壳（exit 255）,远端杀进程用 pkill -x | M022 |
 | M023 | `docs\mistakes\MISTAKES.md`（单文件） | 写锚凭旧 API 记忆翻车(GetVar 152 已改单参 optional),写锚前先 rg 目标树实际签名 | M023 |
+| M024-M026 | `docs\mistakes\MISTAKES.md`（单文件） | bh eval 跑在 Node daemon(页面行为探针必须裸 CDP)、PS 管道改写换行污染 diff/patch 字节(换 Git Bash 重定向;grep $'\r' 计数失真用 tr 数字节)、git apply 仓库子目录静默 skip(沙盒须放仓库外) | M024 至 M026 |
+| M027 | `docs\mistakes\MISTAKES.md`（单文件） | browse-rs 部署目录重建抹 AppContainer ACE 致沙箱态 0x5 崩(deploy 脚本已内置 icacls 自愈;SID 尾数差用 SDDL 对比排查) | M027 |
 
 ## 九、阶段与版本
 

@@ -4,10 +4,11 @@
 # ///
 """apply-auto-allow.py -- clean-chrome anchored patcher (uv, cross-platform).
 
-Patches 33 files of a Chromium checkout with 48 anchors (exact upstream bytes
+Patches 34 files of a Chromium checkout with 50 anchors (exact upstream bytes
 at tag 152.0.7977.84, chosen to hold across nearby tags). Families: CDP
 friction, startup silence, Google touchpoint removal, network endpoint
-zeroing (see docs/research S002/S003/S004 for the full ledger).
+zeroing, console/exception preview suppression (see docs/research
+S002/S003/S004/S006 for the full ledger).
 
 Effect highlights (local automation build only, never send upstream):
   1. adds switch --auto-allow-devtools-connections;
@@ -20,7 +21,10 @@ Effect highlights (local automation build only, never send upstream):
   6. CLEAN_CHROME_DEBUG=port|pipe|both (default port) selects the debug
      channel; pipe starts the fd/io-pipe handler without the TCP port,
      both enables the two side by side; explicit command-line switches
-     always win over the variable (S005).
+     always win over the variable (S005);
+  7. console.* arguments and uncaught exceptions are reported over CDP
+     without eager preview serialization (objectId retained; Runtime
+     .evaluate previews untouched, S006).
 
 Usage:
   uv run patches/apply-auto-allow.py [--src-root C:/clean-chrome/chromium/src]
@@ -645,6 +649,40 @@ NEW_ZPS_PREFETCH = (
 )
 MARK_ZPS_PREFETCH = "clean-chrome: zero-prefix suggest prefetching off"
 
+# --- console/exception preview suppression (D02-8, S006) ----------------------
+
+ANCHOR_CONSOLE_PREVIEW = (
+    "  if (m_origin == V8MessageOrigin::kConsole) {\n"
+    "    std::unique_ptr<protocol::Array<protocol::Runtime::RemoteObject>>\n"
+    "        arguments = wrapArguments(session, generatePreview);"
+)
+NEW_CONSOLE_PREVIEW = (
+    "  if (m_origin == V8MessageOrigin::kConsole) {\n"
+    "    // clean-chrome: never serialize console API arguments eagerly\n"
+    "    // (generatePreview forced off). Previews copy data values / error\n"
+    "    // internals into the protocol payload without the page's consent;\n"
+    "    // the RemoteObject keeps its objectId so a client can still ask\n"
+    "    // for properties explicitly. Runtime.evaluate previews are a\n"
+    "    // separate path and stay untouched (S006). Local automation\n"
+    "    // build only.\n"
+    "    std::unique_ptr<protocol::Array<protocol::Runtime::RemoteObject>>\n"
+    "        arguments = wrapArguments(session, false);"
+)
+MARK_CONSOLE_PREVIEW = "    // clean-chrome: never serialize console API arguments eagerly"
+
+ANCHOR_EXCEPTION_PREVIEW = (
+    "    std::unique_ptr<protocol::Runtime::RemoteObject> exception =\n"
+    "        isSharedCrossOrigin ? wrapException(session, generatePreview) : nullptr;"
+)
+NEW_EXCEPTION_PREVIEW = (
+    "    // clean-chrome: same eager-serialization suppression for uncaught\n"
+    "    // exceptions (local automation build only, S006); the exception\n"
+    "    // object keeps its objectId.\n"
+    "    std::unique_ptr<protocol::Runtime::RemoteObject> exception =\n"
+    "        isSharedCrossOrigin ? wrapException(session, false) : nullptr;"
+)
+MARK_EXCEPTION_PREVIEW = "    // clean-chrome: same eager-serialization suppression"
+
 # --- engine -------------------------------------------------------------------
 
 def _write_text(path: Path, text: str) -> None:
@@ -836,6 +874,13 @@ def main() -> int:
     edit_file(root / "components/omnibox/common/omnibox_features.cc",
               ANCHOR_ZPS_PREFETCH, NEW_ZPS_PREFETCH, MARK_ZPS_PREFETCH,
               "omnibox_features.cc (zero-suggest prefetch off)", mode="replace")
+    edit_file(root / "v8/src/inspector/v8-console-message.cc",
+              ANCHOR_CONSOLE_PREVIEW, NEW_CONSOLE_PREVIEW, MARK_CONSOLE_PREVIEW,
+              "v8-console-message.cc (no console-arg previews)", mode="replace")
+    edit_file(root / "v8/src/inspector/v8-console-message.cc",
+              ANCHOR_EXCEPTION_PREVIEW, NEW_EXCEPTION_PREVIEW, MARK_EXCEPTION_PREVIEW,
+              "v8-console-message.cc (no uncaught-exception previews)",
+              mode="replace")
 
     print("\nDone. Build with:\n  autoninja -C out\\Dev chrome   (incremental: minutes)")
     print("Run with: no arguments needed -- port 9222 opens by default, no prompts.")

@@ -694,3 +694,37 @@ index 7a075a210c..c0c779799f 100644
  // Settings that are to be deleted are marked with this prefix in checkin
  // response.
  const char kDeleteSettingPrefix[] = "delete_";
+diff --git a/v8/src/inspector/v8-console-message.cc b/v8/src/inspector/v8-console-message.cc
+index 684967a2594..09b8835e5cf 100644
+--- a/v8/src/inspector/v8-console-message.cc
++++ b/v8/src/inspector/v8-console-message.cc
+@@ -334,8 +334,11 @@ void V8ConsoleMessage::reportToFrontend(protocol::Runtime::Frontend* frontend,
+     const bool isSharedCrossOrigin =
+         maybeScriptOrigin ? maybeScriptOrigin->Options().IsSharedCrossOrigin()
+                           : false;
++    // clean-chrome: same eager-serialization suppression for uncaught
++    // exceptions (local automation build only, S006); the exception
++    // object keeps its objectId.
+     std::unique_ptr<protocol::Runtime::RemoteObject> exception =
+-        isSharedCrossOrigin ? wrapException(session, generatePreview) : nullptr;
++        isSharedCrossOrigin ? wrapException(session, false) : nullptr;
+     const bool includeException = isSharedCrossOrigin && exception;
+     std::unique_ptr<protocol::Runtime::ExceptionDetails> exceptionDetails =
+         protocol::Runtime::ExceptionDetails::create()
+@@ -370,8 +373,15 @@ void V8ConsoleMessage::reportToFrontend(protocol::Runtime::Frontend* frontend,
+     return;
+   }
+   if (m_origin == V8MessageOrigin::kConsole) {
++    // clean-chrome: never serialize console API arguments eagerly
++    // (generatePreview forced off). Previews copy data values / error
++    // internals into the protocol payload without the page's consent;
++    // the RemoteObject keeps its objectId so a client can still ask
++    // for properties explicitly. Runtime.evaluate previews are a
++    // separate path and stay untouched (S006). Local automation
++    // build only.
+     std::unique_ptr<protocol::Array<protocol::Runtime::RemoteObject>>
+-        arguments = wrapArguments(session, generatePreview);
++        arguments = wrapArguments(session, false);
+     if (inspector->consoleMessageStorage(contextGroupId) != storage) return;
+     if (!arguments) {
+       arguments =
