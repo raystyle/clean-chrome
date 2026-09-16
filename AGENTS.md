@@ -9,7 +9,10 @@
 uv run patches/apply-auto-allow.py --src-root C:/clean-chrome/chromium/src
 # 构建全流程唯一权威(预检/工具链/检出/补丁/构建/验证/分发),不即兴组合参数
 # docs\guides\R001-chromium-build-操作手册.md
-# 文档合规门禁 PE-01至13,提交前必跑,退出码 0 才过
+# 构建与增量(参数唯一权威根 args.gn,只编 chrome 目标;Dev 迭代/Release 分发)
+autoninja -C out\Dev chrome
+autoninja -C out\Release chrome
+# 文档合规门禁 PE-01至12,提交前必跑,退出码 0 才过
 uv run tools/check.py .
 # 管道通道验收与启动器范本
 uv run tools/pipe-smoke.py --mode pipe

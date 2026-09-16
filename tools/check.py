@@ -8,11 +8,15 @@
 退出码: 0 全部通过(含 SKIP)/ 1 存在 FAIL / 2 出错。检查只读,不改目标项目。
 规则对象:AGENTS 五节合同、docs/adr 与 docs/requirements 的 ADR/REQ 状态机与索引一致、
 写作规范(六态/标题/禁字)与引用断链。
+白名单: 环境变量 PEVO_CHECK_ALLOW="正则;正则" 豁免历史档案存量禁字(匹配 docs/ 下
+相对路径:行,命中的报 SKIP 不 FAIL;根三件 AGENTS/README/CHANGELOG 是活跃面,永不受益,
+`.*` 类全域正则只能吞 docs/ 档案,吞不掉根三件;与 scan 的 PEVO_SCAN_ALLOW 同一惯例)。
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -177,27 +181,37 @@ def check(root: Path) -> tuple[list[tuple[str, str, str]], bool]:
     badh: list[str] = []
     cands10 = [root / "AGENTS.md", root / "README.md"] + list((root / "docs").rglob("*.md"))
     for p in [p for p in cands10 if p.exists()]:
+        rel10 = p.relative_to(root).as_posix()
         in_fence = False
         for i, ln in enumerate(_read(p).splitlines(), 1):
             if ln.lstrip().startswith("```"):
                 in_fence = not in_fence
                 continue
             if not in_fence and ln.startswith("#") and "(" in ln:
-                badh.append(f"{p.name}:{i}")
+                badh.append(f"{rel10}:{i}")
     r.append(("PE-10", "FAIL" if badh else "PASS",
               f"标题含括号: {', '.join(badh[:5])}" if badh else "标题无括号"))
 
     # PE-11 四类禁字(emoji/破折号/箭头/智能引号等;豁免区感知,与 scan 同源)
     em: list[str] = []
+    exempt = 0
+    allow11 = [re.compile(p) for p in os.environ.get("PEVO_CHECK_ALLOW", "").split(";") if p.strip()]
     cands11 = [root / f for f in ("AGENTS.md", "README.md", "CHANGELOG.md")] + \
         list((root / "docs").rglob("*.md"))
     for p in [p for p in cands11 if p.exists()]:
         v = file_violations(_read(p))
-        if v:
-            first = min(v)
-            em.append(f"{p.name}:{first}({'+'.join(v[first])})")
-    r.append(("PE-11", "FAIL" if em else "PASS",
-              f"含禁字: {', '.join(em[:5])}" if em else "无四类禁字"))
+        if not v:
+            continue
+        rel = p.relative_to(root).as_posix()
+        live = {ln: labels for ln, labels in v.items()
+                if not (rel.startswith("docs/") and any(a.search(f"{rel}:{ln}") for a in allow11))}
+        exempt += len(v) - len(live)
+        if live:
+            first = min(live)
+            em.append(f"{rel}:{first}({'+'.join(live[first])})")
+    r.append(("PE-11", "FAIL" if em else ("SKIP" if exempt else "PASS"),
+              f"含禁字: {', '.join(em[:5])}" if em else
+              (f"历史档案禁字豁免 {exempt} 处(PEVO_CHECK_ALLOW),活跃面无禁字" if exempt else "无四类禁字")))
 
     # PE-12 AGENTS 与 docs 各 README 反引号路径断链粗检
     dead: list[str] = []

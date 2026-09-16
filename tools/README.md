@@ -4,7 +4,7 @@
 
 | 脚本 | 用途 | 出处 |
 | --- | --- | --- |
-| check.py | 文档体系合规门禁 PE-01至13,提交前必跑,退出码 0 才过 | 自 ProjectEvo dev-evo scripts 拷入,ADR-0007 |
+| check.py | 文档体系合规门禁 PE-01至12,提交前必跑,退出码 0 才过;存量禁字可 PEVO_CHECK_ALLOW 路径级豁免 | 自 ProjectEvo dev-evo scripts 拷入,ADR-0007;2026-09-16 同步权威版 |
 | mdrules.py | 四类禁字规则唯一权威,check.py 依赖,勿单独改 | 同上 |
 | net-probe.py | 网络通道稳定性评估,全平台 | R001 替代路线节 |
 | net-audit.py | 产物网络行为审计,net-log 全进程 Google 域外联统计 | S004 |
